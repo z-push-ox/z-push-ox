@@ -173,6 +173,11 @@ class BackendOX extends BackendDiff {
 	public $mappingRecurrenceOXtoASYNC = array(
 			'strings' => array(
 					'interval' => 'interval',
+					'occurrences' => 'occurrences',
+					'days' => 'dayofweek',
+					//'day_in_month' => 'dayofmonth',
+					//'day_in_month' => 'weekofmonth',
+					//'month' => 'monthofyear', offset of one
 					),
 			'dates' => array(
 					'until' => 'until',
@@ -487,20 +492,8 @@ class BackendOX extends BackendDiff {
 			));
 			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::GetMessage(appointment data: ' . json_encode($response["data"]) . ')');
 			$event = $this->mapValues($response["data"], new SyncAppointment(), $this->mappingCalendarOXtoASYNC, 'php');
-			//$event->timezone = 'UTC';
-			$recurrence = new SyncRecurrence;
-			switch ($response["data"]["recurrence_type"]){
-				
-				case 0:	//no recurrence
-					$recurrence = null;
-					break;
-					
-				case 1: //daily
-					$recurrence->type = 0;
-					$this->mapValues($response["data"], $recurrence, $this->mappingRecurrenceOXtoASYNC);
-				
-			}
-			$event->recurrence = $recurrence;
+			$event->timezone = 'UTC';
+			$event->recurrence = $this->recurrenceOX2Async($response["data"]);
 			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::GetMessage('.$folderid.', '.$id.', event: ' . json_encode($event) . ')');
 			return $event;
 		}
@@ -731,6 +724,40 @@ class BackendOX extends BackendDiff {
 	public function GetAttachmentData($attname) {
 		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::GetAttachmentData(' . $attname . ')');
 		return false;
+	}
+	
+	private function recurrenceOX2Async($data){
+		$recurrence = new SyncRecurrence;
+		switch ($data["recurrence_type"]){
+			case 0:	//no recurrence
+				$recurrence = null;
+				break;
+					
+			case 1: //daily
+				$recurrence->type = 0;
+				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
+				break;
+					
+			case 2: //weekly
+				$recurrence->type = 1;
+				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
+				$recurrence->dayofmonth = $data["day_in_month"];
+				break;
+					
+			case 3: //monthly
+				$recurrence->type = 3;
+				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
+				$recurrence->weekofmonth = $data["day_in_month"];
+				break;
+					
+			case 4: //yearly
+				$recurrence->type = 6;
+				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
+				$recurrence->monthofyear = ($data["month"]) + 1;
+				$recurrence->weekofmonth = $data["day_in_month"];
+				break;
+		}
+		return $recurrence;
 	}
 	
 	/**
