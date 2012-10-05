@@ -151,7 +151,7 @@ class BackendOX extends BackendDiff {
 					'title' => 'subject',
 					//'timezone' => 'timezone',
 					'uid' => 'uid',
-					'organizer' => 'organizeremail',
+					//'organizer' => 'organizeremail',
 					'location' => 'location',
 					'note' => 'body',
 					'categories' => 'categories',
@@ -184,6 +184,8 @@ class BackendOX extends BackendDiff {
 					),
 			);
 	
+	public $mappingRecurrenceASYNCtoOX = array(); // will be filled after login
+	
 	/**
 	 * Authenticates the user
 	 *
@@ -215,6 +217,10 @@ class BackendOX extends BackendDiff {
 						'dates' => array_flip($this->mappingCalendarOXtoASYNC['dates']),
 						'datetimes' => array_flip($this->mappingCalendarOXtoASYNC['datetimes']),
 						'booleans' => array_flip($this->mappingCalendarOXtoASYNC['booleans']),
+						);
+				$this->mappingRecurrenceASYNCtoOX = array(
+						'strings' => array_flip($this->mappingRecurrenceOXtoASYNC['strings']),
+						'dates'=> array_flip($this->mappingRecurrenceOXtoASYNC['dates']),
 						);
 				return true;
 			}
@@ -564,30 +570,48 @@ class BackendOX extends BackendDiff {
 		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage('.$folderid.', '.$id.', message: ' . json_encode($message) . ')');
 		$folder = $this->GetFolder($folderid);
 		
-		if ($folder->type == SYNC_FOLDER_TYPE_CONTACT){
-			if(!$id){
-				// id is not set => create the contact
-				$response = $this->OXreqPUT('/ajax/contacts', array(
+		if(!$id){
+			//id is not set => create object
+			
+			if ($folder->type == SYNC_FOLDER_TYPE_CONTACT){
+				$createResponse = $this->OXreqPUT('/ajax/contacts', array(
 						'action' => 'new',
 						'session' => $this->session,
 					), array(
 						'folder_id' => $folderid, // set the folder in which the user should be created
 				));
-				ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(create contact | folder: ' . $folder->displayname . '  data: ' . json_encode($response) . ')');
-				if (!$response){
-					ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(failed to create new contact in folder: ' . $folder->displayname . ')');
-					throw new StatusException('failed to create new contact in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
-					return false;
-				}
-				$id = $response["data"]["id"];
 			}
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  data: ' . json_encode($message) . ')');
-			$oldmessage = $this->GetMessage($folderid, $id, null);
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  oldmessage: ' . json_encode($oldmessage) . ')');
-			$diff = $this->diffSyncObjects($message, $oldmessage);
+			
+			if ($folder->type == SYNC_FOLDER_TYPE_APPOINTMENT){
+				$createResponse = $this->OXreqPUT('/ajax/calendar', array(
+						'action' => 'new',
+						'session' => $this->session,
+				), array(
+						'folder_id' => $folderid, // set the folder in which the user should be created
+						'start_date' => 0,
+						'end_date' => 0,
+				));
+			}
+			
+			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(create object | folder: ' . $folder->displayname . '  data: ' . json_encode($response) . ')');
+			if (!$createResponse){
+				ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(failed to create new contact in folder: ' . $folder->displayname . ')');
+				throw new StatusException('failed to create new contact in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				return false;
+			}
+			$id = $createResponse["data"]["id"];
+		}
+		
+		$oldmessage = $this->GetMessage($folderid, $id, null);
+		$diff = $this->diffSyncObjects($message, $oldmessage);
+		$stat = $this->StatMessage($folderid, $id);
+		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  data: ' . json_encode($message) . ')');
+		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  oldmessage: ' . json_encode($oldmessage) . ')');
+		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  sourceDataChanged: ' . json_encode($diff) . ')');
+		
+		// handle contacts
+		if ($folder->type == SYNC_FOLDER_TYPE_CONTACT){
 			$diffOX = $this->mapValues($diff, array(), $this->mappingContactsASYNCtoOX, 'ox');
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  dataChanged: ' . json_encode($diffOX) . ')');
-			$stat = $this->StatMessage($folderid, $id);
 			$response = $this->OXreqPUT('/ajax/contacts', array(
 					'action' => 'update',
 					'session' => $this->session,
@@ -595,19 +619,29 @@ class BackendOX extends BackendDiff {
 					'id' => $id,
 					'timestamp' => $stat["mod"],
 			), $diffOX);
-			if ($response){
-				ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(successfully changed - folder: ' . $folder->displayname . '   id: ' . $id .  ')');
-				return $this->StatMessage($folderid, $id);
-			} else {
-				throw new StatusException('could not change contact: ' . $id . ' in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
-				return false;
-			}
 		}
 		
 		
 		// handle calendar
 		if ($folder->type == SYNC_FOLDER_TYPE_APPOINTMENT){
-			
+			$diffOX = $this->mapValues($diff, array(), $this->mappingCalendarASYNCtoOX, 'ox');
+			$response = $this->OXreqPUT('/ajax/calendar', array(
+					'action' => 'update',
+					'session' => $this->session,
+					'folder' => $folderid,
+					'id' => $id,
+					'timestamp' => $stat["mod"],
+			), $diffOX);
+		}
+		
+		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(folder: ' . $folder->displayname . '  dataChanged: ' . json_encode($diffOX) . ')');
+		
+		if ($response){
+			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(successfully changed - folder: ' . $folder->displayname . '   id: ' . $id .  ')');
+			return $this->StatMessage($folderid, $id);
+		} else {
+			throw new StatusException('could not change contact: ' . $id . ' in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+			return false;
 		}
 		
 		return false;
