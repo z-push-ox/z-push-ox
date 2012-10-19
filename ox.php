@@ -8,6 +8,7 @@
 include_once('lib/default/diffbackend/diffbackend.php');
 include_once('include/mimeDecode.php');
 require_once('include/z_RFC822.php');
+require_once('lib/utils/timezoneutil.php');
 require_once 'HTTP/Request2.php';
 
 class BackendOX extends BackendDiff {
@@ -123,7 +124,6 @@ class BackendOX extends BackendDiff {
 	
 	/*
 	ToDo:
-    public $dtstamp;
     public $organizername;
     public $recurrence;
     public $sensitivity;
@@ -215,7 +215,7 @@ class BackendOX extends BackendDiff {
 				$this->mappingCalendarASYNCtoOX = array(
 						'strings' => array_flip($this->mappingCalendarOXtoASYNC['strings']),
 						'dates' => array_flip($this->mappingCalendarOXtoASYNC['dates']),
-						'datetimes' => array_flip($this->mappingCalendarOXtoASYNC['datetimes']),
+						//'datetimes' => array_flip($this->mappingCalendarOXtoASYNC['datetimes']),
 						'booleans' => array_flip($this->mappingCalendarOXtoASYNC['booleans']),
 						);
 				$this->mappingRecurrenceASYNCtoOX = array(
@@ -593,10 +593,10 @@ class BackendOX extends BackendDiff {
 				));
 			}
 			
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(create object | folder: ' . $folder->displayname . '  data: ' . json_encode($response) . ')');
+			//ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(create object | folder: ' . $folder->displayname . '  data: ' . json_encode($response) . ')');
 			if (!$createResponse){
-				ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(failed to create new contact in folder: ' . $folder->displayname . ')');
-				throw new StatusException('failed to create new contact in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(failed to create object in folder: ' . $folder->displayname . ')');
+				throw new StatusException('failed to create new object in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
 				return false;
 			}
 			$id = $createResponse["data"]["id"];
@@ -625,6 +625,8 @@ class BackendOX extends BackendDiff {
 		// handle calendar
 		if ($folder->type == SYNC_FOLDER_TYPE_APPOINTMENT){
 			$diffOX = $this->mapValues($diff, array(), $this->mappingCalendarASYNCtoOX, 'ox');
+			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(DEBUG: ' . json_encode($diffOX) . ')');
+			//ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence )));
 			$response = $this->OXreqPUT('/ajax/calendar', array(
 					'action' => 'update',
 					'session' => $this->session,
@@ -761,8 +763,10 @@ class BackendOX extends BackendDiff {
 	}
 	
 	private function recurrenceOX2Async($data){
+		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceOX2Async(' . json_encode($data) . ')');
 		$recurrence = new SyncRecurrence;
 		switch ($data["recurrence_type"]){
+			
 			case 0:	//no recurrence
 				$recurrence = null;
 				break;
@@ -789,6 +793,24 @@ class BackendOX extends BackendDiff {
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
 				$recurrence->monthofyear = ($data["month"]) + 1;
 				$recurrence->weekofmonth = $data["day_in_month"];
+				break;
+		}
+		return $recurrence;
+	}
+	
+	private function recurrenceAsync2OX($data){
+		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceAsync2OX(' . json_encode($data) . ')');
+		
+		$recurrence = array();
+		switch ($data->type){
+			
+			case null: //no recurrence
+				$recurrence["recurrence_type"] = 0;
+				break;
+				
+			case 0: //daily
+				$recurrence["recurrence_type"] = 1;
+				$this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox');
 				break;
 		}
 		return $recurrence;
@@ -843,6 +865,42 @@ class BackendOX extends BackendDiff {
 		return $destinationTimezone->getOffset($destinationDate) - $sourceTimezone->getOffset($sourceDate);
 	}
 	
+	
+	/**
+	 * helper function for mapValues
+	 * 
+	 * @param unknown $object
+	 * @param string $key
+	 * @param unknown $value
+	 */
+	private function _setValue($object, $key, $value){
+		if (gettype($object) == 'array'){
+			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::_setValue(objectType: ' . gettype($object) . '   key: ' . $key . '   value: ' . $value . ')');
+			$object[$key] = $value;
+		}
+		else {
+			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::_setValue(objectType: ' . gettype($object) . '   key: ' . $key . '   value: ' . $value . ')');
+			$object->$key = $value;
+		}
+		return $object;
+	}
+	
+	/**
+	 * helper function for mapValues
+	 * 
+	 * @param unknown $object
+	 * @param string $key
+	 * @return unknown
+	 */
+	private function _getValue($object, $key){
+		if (gettype($object) == 'array'){
+			return $object[$key];
+		}
+		else {
+			return $object->$key;
+		}
+	}
+	
 	/**
 	 * 
 	 * @param array			$dataArray
@@ -850,11 +908,11 @@ class BackendOX extends BackendDiff {
 	 * @param array			$mapping
 	 * @param string 		$dateTimeTarget		possible values: false|"ox"|"php"
 	 */
-	
 	private function mapValues($dataArray, $syncObject, $mapping, $dateTimeTarget=false, $timezoneOffset=0){
 		//ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(offset: ' . $timezoneOffset . ')');
 		$sections = array_keys($mapping);
 		//ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(DEBUG: ' . json_encode($sections) . ')');
+		
 		foreach ($sections as &$section){
 			$datafields = array_keys($mapping[$section]);
 			//ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(DEBUG2: ' . json_encode($datafields) . ')');
@@ -863,29 +921,26 @@ class BackendOX extends BackendDiff {
 					$asyncKey = $mapping[$section][$datafield];
 					
 					if ($section == 'strings'){
-						if (gettype($syncObject) == 'array'){
-							$syncObject[$asyncKey] = $dataArray[$datafield];
-						} else {
-							$syncObject->$asyncKey = $dataArray[$datafield];
-						}
+						$syncObject = $this->_setValue($syncObject, $asyncKey, $this->_getValue($dataArray, $datafield));
 					}
 					
 					if ($section == 'dates'){
-						if ($dateTimeTarget == "ox"){
-							$dataArray[$datafield] = $this->timestampPHPtoOX($dataArray[$datafield], $timezoneOffset);
+						$datetTime = null;
+						switch ($dateTimeTarget) {
+							case "ox":
+								$datetTime = $this->timestampPHPtoOX($this->_getValue($dataArray, $datafield), $timezoneOffset);
+								break;
+							case "php":
+								$datetTime = $this->timestampOXtoPHP($this->_getValue($dataArray, $datafield), $timezoneOffset);
+								break;
+							default:
+								$datetTime = $this->_getValue($dataArray, $datafield);
+								break;
 						}
-						if ($dateTimeTarget == "php"){
-							$dataArray[$datafield] = $this->timestampOXtoPHP($dataArray[$datafield], $timezoneOffset);
-						}
-						if (gettype($syncObject) == 'array'){
-							$syncObject[$asyncKey] = $dataArray[$datafield];
-						} else {
-							$syncObject->$asyncKey = $dataArray[$datafield];
-						}
+						$syncObject = $this->_setValue($syncObject, $asyncKey, $datetTime);
 					}
 					
 					if ($section == 'booleans'){
-						ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(booleans ' . $datafield . ' source: ' . $dataArray[$datafield] . ')');
 						if ($dateTimeTarget == "ox"){
 							if ($dataArray[$datafield] == 1){
 								$dataArray[$datafield] = 'true';
@@ -902,12 +957,7 @@ class BackendOX extends BackendDiff {
 								$dataArray[$datafield] = 0;
 							}
 						}
-						ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(booleans ' . $datafield . ' destination: ' . $dataArray[$datafield] . ')');
-						if (gettype($syncObject) == 'array'){
-							$syncObject[$asyncKey] = $dataArray[$datafield];
-						} else {
-							$syncObject->$asyncKey = $dataArray[$datafield];
-						}
+						$syncObject = $this->_setValue($syncObject, $asyncKey, $this->_getValue($dataArray, $datafield));
 						
 					}
 				}
