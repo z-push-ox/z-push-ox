@@ -593,7 +593,6 @@ class BackendOX extends BackendDiff {
 				));
 			}
 			
-			//ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(create object | folder: ' . $folder->displayname . '  data: ' . json_encode($response) . ')');
 			if (!$createResponse){
 				ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(failed to create object in folder: ' . $folder->displayname . ')');
 				throw new StatusException('failed to create new object in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
@@ -625,7 +624,8 @@ class BackendOX extends BackendDiff {
 		// handle calendar
 		if ($folder->type == SYNC_FOLDER_TYPE_APPOINTMENT){
 			$diffOX = $this->mapValues($diff, array(), $this->mappingCalendarASYNCtoOX, 'ox');
-			ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence )));
+			$diffOX = array_merge($diffOX, $this->recurrenceAsync2OX($message->recurrence)); //append recurrence data
+			//ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence) ));
 			$response = $this->OXreqPUT('/ajax/calendar', array(
 					'action' => 'update',
 					'session' => $this->session,
@@ -809,9 +809,17 @@ class BackendOX extends BackendDiff {
 				
 			case 0: //daily
 				$recurrence["recurrence_type"] = 1;
-				$this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox');
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+				unset($recurrence['days']);
 				break;
 		}
+		
+		if (array_key_exists('occurrences', $recurrence)){
+			if ($recurrence['occurrences'] == null){
+				unset($recurrence['occurrences']);
+			}
+		}
+		
 		return $recurrence;
 	}
 	
@@ -968,6 +976,9 @@ class BackendOX extends BackendDiff {
 	 * 
 	 */
 	private function timestampPHPtoOX($phpstamp, $timezoneOffset=0){
+		if ($phpstamp == null){
+			return null;
+		}
 		$phpstamp = intval($phpstamp) + $timezoneOffset;
 		return $phpstamp . "000";
 	}
