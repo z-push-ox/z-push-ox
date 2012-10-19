@@ -625,8 +625,7 @@ class BackendOX extends BackendDiff {
 		// handle calendar
 		if ($folder->type == SYNC_FOLDER_TYPE_APPOINTMENT){
 			$diffOX = $this->mapValues($diff, array(), $this->mappingCalendarASYNCtoOX, 'ox');
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(DEBUG: ' . json_encode($diffOX) . ')');
-			//ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence )));
+			ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence )));
 			$response = $this->OXreqPUT('/ajax/calendar', array(
 					'action' => 'update',
 					'session' => $this->session,
@@ -875,11 +874,9 @@ class BackendOX extends BackendDiff {
 	 */
 	private function _setValue($object, $key, $value){
 		if (gettype($object) == 'array'){
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::_setValue(objectType: ' . gettype($object) . '   key: ' . $key . '   value: ' . $value . ')');
 			$object[$key] = $value;
 		}
 		else {
-			ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::_setValue(objectType: ' . gettype($object) . '   key: ' . $key . '   value: ' . $value . ')');
 			$object->$key = $value;
 		}
 		return $object;
