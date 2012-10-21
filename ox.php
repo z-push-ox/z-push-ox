@@ -765,7 +765,6 @@ class BackendOX extends BackendDiff {
 		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceOX2Async(' . json_encode($data) . ')');
 		$recurrence = new SyncRecurrence;
 		switch ($data["recurrence_type"]){
-			
 			case 0:	//no recurrence
 				$recurrence = null;
 				break;
@@ -781,16 +780,24 @@ class BackendOX extends BackendDiff {
 				$recurrence->dayofmonth = $data["day_in_month"];
 				break;
 					
-			case 3: //monthly
-				$recurrence->type = 3;
+			case 3: //monthly | monthly on the nth day
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
-				$recurrence->weekofmonth = $data["day_in_month"];
+				if ($recurrence->dayofweek){
+					//monthly on the nth day
+					$recurrence->type = 3;
+					$recurrence->weekofmonth = $data["day_in_month"];
+				}
+				else {
+					//monthly
+					$recurrence->type = 2;
+					$recurrence->dayofmonth = $data["day_in_month"];
+				}
 				break;
 					
 			case 4: //yearly
 				$recurrence->type = 6;
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
-				$recurrence->monthofyear = ($data["month"]) + 1;
+				$recurrence->monthofyear = intval($data["month"]) + 1;
 				$recurrence->weekofmonth = $data["day_in_month"];
 				break;
 		}
@@ -801,23 +808,64 @@ class BackendOX extends BackendDiff {
 		ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceAsync2OX(' . json_encode($data) . ')');
 		
 		$recurrence = array();
+		
+		if (!$data){
+			$recurrence['recurrence_type'] = "0";
+			//$recurrence["day_in_month"] = null;
+			//$recurrence['interval'] = null;
+			//$recurrence['until'] = null;
+			//$recurrence['days'] = null;
+			//$recurrence['occurrences'] = null;
+			return $recurrence;
+		}
+		
 		switch ($data->type){
 			
+			/*
 			case null: //no recurrence
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
 				$recurrence["recurrence_type"] = 0;
+				unset($recurrence['days']);
 				break;
-				
+				*/
 			case 0: //daily
 				$recurrence["recurrence_type"] = 1;
 				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
 				unset($recurrence['days']);
 				break;
+				
+			case 1: //weekly
+				$recurrence["recurrence_type"] = 2;
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+				break;
+				
+			case 2: //monthly
+				$recurrence["recurrence_type"] = 3;
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+				$recurrence["day_in_month"] = $data->dayofmonth;
+				unset($recurrence['days']);
+				break;
+				
+			case 3: //monthly on the nth day
+				$recurrence["recurrence_type"] = 3;
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+				$recurrence["day_in_month"] = $data->weekofmonth;
+				break;
+				
+			case 6: //yearly
+				$recurrence["recurrence_type"] = 4;
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+				$recurrence["month"] = intval($data->monthofyear) - 1;
+				$recurrence["day_in_month"] = $data->weekofmonth;
+				break;
 		}
 		
-		if (array_key_exists('occurrences', $recurrence)){
-			if ($recurrence['occurrences'] == null){
-				unset($recurrence['occurrences']);
-			}
+		if (array_key_exists('occurrences', $recurrence) && $recurrence['occurrences'] == null){
+			unset($recurrence['occurrences']);
+		}
+		
+		if ($recurrence["recurrence_type"] > 2 && array_key_exists('days', $recurrence) && $recurrence['days'] == null){
+			$recurrence['days'] = 127;
 		}
 		
 		return $recurrence;
