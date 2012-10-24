@@ -795,10 +795,18 @@ class BackendOX extends BackendDiff {
 				break;
 					
 			case 4: //yearly
-				$recurrence->type = 6;
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
 				$recurrence->monthofyear = intval($data["month"]) + 1;
-				$recurrence->weekofmonth = $data["day_in_month"];
+				if ($recurrence->dayofweek){
+					//yearly
+					$recurrence->type = 6;
+					$recurrence->weekofmonth = $data["day_in_month"];
+				}
+				else {
+					//yearly on the nth day
+					$recurrence->type = 5;
+					$recurrence->dayofmonth = $data["day_in_month"];
+				}
 				break;
 		}
 		return $recurrence;
@@ -810,6 +818,7 @@ class BackendOX extends BackendDiff {
 		$recurrence = array();
 		
 		if (!$data){
+			//if $data is null there is no recurrence
 			$recurrence['recurrence_type'] = "0";
 			//$recurrence["day_in_month"] = null;
 			//$recurrence['interval'] = null;
@@ -821,13 +830,6 @@ class BackendOX extends BackendDiff {
 		
 		switch ($data->type){
 			
-			/*
-			case null: //no recurrence
-				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
-				$recurrence["recurrence_type"] = 0;
-				unset($recurrence['days']);
-				break;
-				*/
 			case 0: //daily
 				$recurrence["recurrence_type"] = 1;
 				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
@@ -852,7 +854,14 @@ class BackendOX extends BackendDiff {
 				$recurrence["day_in_month"] = $data->weekofmonth;
 				break;
 				
-			case 6: //yearly
+			case 5: //yearly
+				$recurrence["recurrence_type"] = 4;
+				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+				$recurrence["month"] = intval($data->monthofyear) - 1;
+				$recurrence["day_in_month"] = $data->dayofmonth;
+				break;
+				
+			case 6: //yearly on the nth day
 				$recurrence["recurrence_type"] = 4;
 				$recurrence = array_merge( $this->mapValues($data, $recurrence, $this->mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
 				$recurrence["month"] = intval($data->monthofyear) - 1;
