@@ -160,11 +160,15 @@ class BackendOX extends BackendDiff {
 			'dates' => array(
 					'start_date' => 'starttime',
 					'end_date' => 'endtime',
-			),
+					),
 			
 			'booleans' => array(
 					'full_time' => 'alldayevent',
-			),
+					),
+			
+			'timezone' => array(
+					'timezone' => 'timezone',
+					),
 	);
 	
 	public $mappingCalendarASYNCtoOX = array(); // will be filled after login
@@ -186,6 +190,22 @@ class BackendOX extends BackendDiff {
 	
 	public $mappingRecurrenceASYNCtoOX = array(); // will be filled after login
 	
+	
+	
+	/**
+	 * reverses a mapping
+	 * 
+	 * @param array $mapping
+	 */
+	private function reversemap($mapping){
+		$data = array();
+		$sections = array_keys($mapping);
+		foreach ($sections as &$section){
+			$data[$section] = array_flip($mapping[$section]);
+		}
+		return $data;
+	}
+	
 	/**
 	 * Authenticates the user
 	 *
@@ -206,22 +226,10 @@ class BackendOX extends BackendDiff {
 			if (array_key_exists("session", $response)){
 				$this->session = $response["session"];
 				ZLog::Write(LOGLEVEL_DEBUG, "BackendOX::Logon() - login success: " . $this->session);
-				// ToDo: this needs refactoring!
-				$this->mappingContactsASYNCtoOX = array(
-						'strings' => array_flip($this->mappingContactsOXtoASYNC['strings']),
-						'dates' => array_flip($this->mappingContactsOXtoASYNC['dates']),
-						'datetimes' => array_flip($this->mappingContactsOXtoASYNC['datetimes']),
-						);
-				$this->mappingCalendarASYNCtoOX = array(
-						'strings' => array_flip($this->mappingCalendarOXtoASYNC['strings']),
-						'dates' => array_flip($this->mappingCalendarOXtoASYNC['dates']),
-						//'datetimes' => array_flip($this->mappingCalendarOXtoASYNC['datetimes']),
-						'booleans' => array_flip($this->mappingCalendarOXtoASYNC['booleans']),
-						);
-				$this->mappingRecurrenceASYNCtoOX = array(
-						'strings' => array_flip($this->mappingRecurrenceOXtoASYNC['strings']),
-						'dates'=> array_flip($this->mappingRecurrenceOXtoASYNC['dates']),
-						);
+				//fill the reverse mappings
+				$this->mappingContactsASYNCtoOX = $this->reversemap($this->mappingContactsOXtoASYNC);
+				$this->mappingCalendarASYNCtoOX = $this->reversemap($this->mappingCalendarOXtoASYNC);
+				$this->mappingRecurrenceASYNCtoOX = $this->reversemap($this->mappingRecurrenceOXtoASYNC);
 				return true;
 			}
 		}
