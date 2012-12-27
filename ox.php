@@ -776,18 +776,18 @@ class BackendOX extends BackendDiff {
 			case 0:	//no recurrence
 				$recurrence = null;
 				break;
-					
+
 			case 1: //daily
 				$recurrence->type = 0;
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
 				break;
-					
+
 			case 2: //weekly
 				$recurrence->type = 1;
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
 				$recurrence->dayofmonth = $data["day_in_month"];
 				break;
-					
+
 			case 3: //monthly | monthly on the nth day
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
 				if ($recurrence->dayofweek){
@@ -801,7 +801,7 @@ class BackendOX extends BackendDiff {
 					$recurrence->dayofmonth = $data["day_in_month"];
 				}
 				break;
-					
+
 			case 4: //yearly
 				$this->mapValues($data, $recurrence, $this->mappingRecurrenceOXtoASYNC, 'php');
 				$recurrence->monthofyear = intval($data["month"]) + 1;
@@ -1099,7 +1099,7 @@ class BackendOX extends BackendDiff {
 		}
 		try {
 			$data = json_decode($response->getBody(), true);
-			if (array_key_exists("error", $data)){
+			if ( is_array($data) && array_key_exists("error", $data)){
 				ZLog::Write(LOGLEVEL_WARN, 'BackendOX::OXreq(error: ' . $response->getBody() . ')');
 				return false;
 			}
