@@ -5,6 +5,7 @@
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/3.0/
  */
 
+include_once('mail/emails.php');
 include_once('lib/default/diffbackend/diffbackend.php');
 include_once('include/mimeDecode.php');
 require_once('include/z_RFC822.php');
