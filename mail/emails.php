@@ -189,7 +189,52 @@ class OXEmailSync {
     #$output->read    = isset($response["data"]["unseen"]) == true ? true : false;
     $output -> read = array_key_exists("unseen", $response["data"]) && $response["data"]["unseen"] == "true" ? false : true;
     $output -> datereceived = $this -> timestampOXtoPHP($response["data"]["received_date"]);
-    $output -> body = $response["data"]["attachments"][0]["content"];
+
+    foreach ($response["data"]["attachments"] as $attachment) {
+      ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): Attachment "' . $attachment['id'] . '" has Contenttype "' . $attachment['content_type'] . '"');
+
+      // Extract text/html an text/plain parts:
+      $textPlain = "";
+      $textHtml = "";
+      if ($attachment['content_type'] == "text/plain") {
+        $textPlain = Utils::ConvertHtmlToText(str_replace("<br>", "\n", $attachment['content'])); // str_replace("<br>", "\n", $attachment['content']);
+      } else if ($attachment['content_type'] == "text/html") {
+        $textHtml = $attachment['content'];
+      }
+    }
+
+    // AS-Version >=12 supports HTML-Messages and html-ContentPart was found:
+    if (Request::GetProtocolVersion() >= 12.0 && !empty($textHtml)) {
+      $output -> asbody = new SyncBaseBody();
+      $output -> asbody -> data = $textHtml; //  "<b>fett</b>";
+      // $textHtml;
+      $output -> asbody -> type = SYNC_BODYPREFERENCE_HTML;
+      $output -> nativebodytype = SYNC_BODYPREFERENCE_HTML;
+      $output -> asbody -> estimatedDataSize = strlen($output -> asbody -> data);
+
+      $truncsize = Utils::GetTruncSize($contentparameters -> GetTruncation());
+      if (strlen($output -> asbody -> data) > $truncsize) {
+        $output -> asbody -> data = Utils::Utf8_truncate($output -> asbody -> data, $truncsize);
+        $output -> asbody -> truncated = 1;
+      }
+
+    } else if (Request::GetProtocolVersion() >= 12.0 && !empty($textPlain)) {
+      // Text-Mails:
+      $output -> asbody = new SyncBaseBody();
+      $output -> asbody -> data = $textPlain;
+      // $textHtml;
+      $output -> asbody -> type = SYNC_BODYPREFERENCE_PLAIN;
+      $output -> nativebodytype = SYNC_BODYPREFERENCE_PLAIN;
+      $output -> asbody -> estimatedDataSize = strlen($output -> asbody -> data);
+
+      $bpo = $contentparameters -> BodyPreference($output -> asbody -> type);
+      if (Request::GetProtocolVersion() >= 14.0 && $bpo -> GetPreview()) {
+        $output -> asbody -> preview = Utils::Utf8_truncate(Utils::ConvertHtmlToText($plainBody), $bpo -> GetPreview());
+      }
+    } else {
+      // Default action is to only send the textPlain-Part via AS2.5
+      $output -> body = $textPlain;
+    }
 
     return $output;
 
@@ -297,11 +342,10 @@ class OXEmailSync {
 
     $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'delete', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid), array('0' => array('folder' => $folderid, 'id' => $id)));
 
-    if ($response)
-    {
+    if ($response) {
       return true;
     }
-    
+
     return false;
   }
 

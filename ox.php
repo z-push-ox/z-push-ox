@@ -30,6 +30,16 @@ class BackendOX extends BackendDiff {
   }
 
   /**
+   * Indicates which AS version is supported by the backend.
+   *
+   * @access public
+   * @return string       AS version constant
+   */
+  public function GetSupportedASVersion() {
+    return ZPush::ASV_14;
+  }
+
+  /**
    * Authenticates the user
    *
    * @param string        $username
@@ -348,7 +358,7 @@ class BackendOX extends BackendDiff {
    */
   public function ChangeMessage($folderid, $id, $message) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(' . $folderid . ', ' . $id . ', message: ' . json_encode($message) . ')');
-    
+
     $folder = $this -> GetFolder($folderid);
 
     return $this -> callModuleHandlerForFolder("ChangeMessage", $folder, array($folder, $id, $message));
@@ -385,11 +395,11 @@ class BackendOX extends BackendDiff {
    */
   public function DeleteMessage($folderid, $id) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::DeleteMessage(' . $folderid . ', ' . $id . ')');
-    
+
     $folder = $this -> GetFolder($folderid);
 
     return $this -> callModuleHandlerForFolder("DeleteMessage", $folder, array($folder, $id));
-    
+
   }
 
   /**
@@ -406,7 +416,7 @@ class BackendOX extends BackendDiff {
    */
   public function MoveMessage($folderid, $id, $newfolderid) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::MoveMessage(' . $folderid . ', ' . $id . '...)');
-    
+
     $folder = $this -> GetFolder($folderid);
 
     return $this -> callModuleHandlerForFolder("MoveMessage", $folder, array($folder, $id, $newfolderid));
