@@ -9,10 +9,10 @@ class OXUtils
    * @param SYNC_OBJECT $obj1
    * @param SYNC_OBJECT $obj2
    * 
-   * @access private
+   * @access public
    * @return array
    */
-  private function diffSyncObjects($obj1, $obj2){
+  public function diffSyncObjects($obj1, $obj2){
     // convert objects to arrays
     $obj1 = json_decode(json_encode($obj1), true);
     $obj2 = json_decode(json_encode($obj2), true);

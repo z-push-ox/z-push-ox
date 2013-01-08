@@ -75,6 +75,57 @@ class OXContactSync {
   }
 
   /**
+   * Called when a message has been changed on the mobile.
+   * This functionality is not available for emails.
+   *
+   * @param string        $folderid       id of the folder
+   * @param string        $id             id of the message | if id not set create the message
+   * @param SyncXXX       $message        the SyncObject containing a message
+   *
+   * @access public
+   * @return array                        same return value as StatMessage()
+   * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
+   */
+  public function ChangeMessage($folder, $id, $message) {
+
+    $folderid = $folder -> serverid;
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(' . $folderid . ', ' . $id . ', ...)');
+
+    if (!$id) {
+      //id is not set => create object
+      $createResponse = $this -> OXConnector -> OXreqPUT('/ajax/contacts', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), array('folder_id' => $folderid, // set the folder in which the user should be created
+      ));
+
+      if (!$createResponse) {
+        ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(failed to create object in folder: ' . $folder -> displayname . ')');
+        throw new StatusException('failed to create new object in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+        return false;
+      }
+
+      $id = $createResponse["data"]["id"];
+      ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(' . $folderid . ', ' . $id . ', ...) New contact created with id "' . $id . '"');
+    }
+
+    //id is set => change object
+    $oldmessage = $this -> GetMessage($folder, $id, null);
+    $diff = $this -> OXUtils -> diffSyncObjects($message, $oldmessage);
+    $stat = $this -> StatMessage($folder, $id);
+
+    $diffOX = $this -> OXUtils -> mapValues($diff, array(), $this -> mappingContactsASYNCtoOX, 'ox');
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/contacts', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'timestamp' => $stat["mod"], ), $diffOX);
+
+    if ($response) {
+      ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(successfully changed - folder: ' . $folder -> displayname . '   id: ' . $id . ')');
+      return $this -> StatMessage($folder, $id);
+    } else {
+      throw new StatusException('could not change contact: ' . $id . ' in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+      return false;
+    }
+
+  }
+
+  /**
    * Changes the 'read' flag of a message on disk
    *
    * @param string        $folder       id of the folder

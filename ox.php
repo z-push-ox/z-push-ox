@@ -348,6 +348,10 @@ class BackendOX extends BackendDiff {
    */
   public function ChangeMessage($folderid, $id, $message) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(' . $folderid . ', ' . $id . ', message: ' . json_encode($message) . ')');
+    
+    $folder = $this -> GetFolder($folderid);
+
+    return $this -> callModuleHandlerForFolder("ChangeMessage", $folder, array($folder, $id, $message));
   }
 
   /**
