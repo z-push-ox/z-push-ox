@@ -126,6 +126,48 @@ class OXContactSync {
   }
 
   /**
+   * Called when the user has requested to delete (really delete) a message
+   *
+   * @param string        $folderid       id of the folder
+   * @param string        $id             id of the message
+   *
+   * @access public
+   * @return boolean                      status of the operation
+   * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
+   */
+  public function DeleteMessage($folder, $id) {
+
+    $folderid = $folder -> serverid;
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::DeleteMessage(' . $folderid . ', ' . $id . ')');
+
+    $stat = $this -> StatMessage($folder, $id);
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/contacts', array('action' => 'delete', 'session' => $this -> OXConnector -> getSession(), 'timestamp' => $stat["mod"], ), array('folder' => $folderid, 'id' => $id, ));
+    if ($response) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Called when the user moves an item on the PDA from one folder to another
+   * not implemented
+   *
+   * @param string        $folderid       id of the source folder
+   * @param string        $id             id of the message
+   * @param string        $newfolderid    id of the destination folder
+   *
+   * @access public
+   * @return boolean                      status of the operation
+   * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
+   */
+  public function MoveMessage($folder, $id, $newfolderid) {
+    $folderid = $folder -> serverid;
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::MoveMessage(' . $folderid . ', ' . $id . ', ' . $newfolderid . ')');
+  }
+
+  /**
    * Changes the 'read' flag of a message on disk
    *
    * @param string        $folder       id of the folder

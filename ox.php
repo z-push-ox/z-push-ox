@@ -385,6 +385,11 @@ class BackendOX extends BackendDiff {
    */
   public function DeleteMessage($folderid, $id) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::DeleteMessage(' . $folderid . ', ' . $id . ')');
+    
+    $folder = $this -> GetFolder($folderid);
+
+    return $this -> callModuleHandlerForFolder("DeleteMessage", $folder, array($folder, $id));
+    
   }
 
   /**
@@ -401,7 +406,10 @@ class BackendOX extends BackendDiff {
    */
   public function MoveMessage($folderid, $id, $newfolderid) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::MoveMessage(' . $folderid . ', ' . $id . '...)');
-    return false;
+    
+    $folder = $this -> GetFolder($folderid);
+
+    return $this -> callModuleHandlerForFolder("MoveMessage", $folder, array($folder, $id, $newfolderid));
   }
 
   /**

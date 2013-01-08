@@ -92,7 +92,7 @@ class OXCalendarSync {
 
     $folderid = $folder -> serverid;
 
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(' . $folderid . ', ' . $id . ', ...)');
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::ChangeMessage(' . $folderid . ', ' . $id . ', ...)');
 
     if (!$id) {
       //id is not set => create object
@@ -100,7 +100,7 @@ class OXCalendarSync {
       'start_date' => 0, 'end_date' => 0, ));
 
       if (!$createResponse) {
-        ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(failed to create object in folder: ' . $folder -> displayname . ')');
+        ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::ChangeMessage(failed to create object in folder: ' . $folder -> displayname . ')');
         throw new StatusException('failed to create new object in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
         return false;
       }
@@ -119,14 +119,48 @@ class OXCalendarSync {
     //ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence) ));
     $response = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'timestamp' => $stat["mod"], ), $diffOX);
 
-    if ($response){
-      ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(successfully changed - folder: ' . $folder->displayname . '   id: ' . $id .  ')');
-      return $this->StatMessage($folder, $id);
+    if ($response) {
+      ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::ChangeMessage(successfully changed - folder: ' . $folder -> displayname . '   id: ' . $id . ')');
+      return $this -> StatMessage($folder, $id);
     } else {
-      throw new StatusException('could not change contact: ' . $id . ' in folder: ' . $folder->displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+      throw new StatusException('could not change contact: ' . $id . ' in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
       return false;
     }
 
+  }
+
+  /**
+   * Called when the user has requested to delete (really delete) a message
+   *
+   * @param string        $folderid       id of the folder
+   * @param string        $id             id of the message
+   *
+   * @access public
+   * @return boolean                      status of the operation
+   * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
+   */
+  public function DeleteMessage($folder, $id) {
+
+    $folderid = $folder -> serverid;
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::DeleteMessage(' . $folderid . ', ' . $id . ')');
+  }
+
+  /**
+   * Called when the user moves an item on the PDA from one folder to another
+   * not implemented
+   *
+   * @param string        $folderid       id of the source folder
+   * @param string        $id             id of the message
+   * @param string        $newfolderid    id of the destination folder
+   *
+   * @access public
+   * @return boolean                      status of the operation
+   * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
+   */
+  public function MoveMessage($folder, $id, $newfolderid) {
+    $folderid = $folder -> serverid;
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::MoveMessage(' . $folderid . ', ' . $id . ', ' . $newfolderid . ')');
   }
 
   /**

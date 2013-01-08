@@ -266,10 +266,10 @@ class OXEmailSync {
    */
   public function SetReadFlag($folder, $id, $flags) {
 
-    $folderid = $folder->serverid;
+    $folderid = $folder -> serverid;
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SetReadFlag(' . $folderid . ', ' . $id . ', ' . $flags . ')');
-    
+
     $value = $flags == 0 ? 'false' : 'true';
 
     $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id), array('flags' => '32', 'value' => $value));
@@ -289,10 +289,19 @@ class OXEmailSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function DeleteMessage($folderid, $id) {
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::DeleteMessage(' . $folderid . ', ' . $id . ')');
-    $folder = $this -> GetFolder($folderid);
+  public function DeleteMessage($folder, $id) {
 
+    $folderid = $folder -> serverid;
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::DeleteMessage(' . $folderid . ', ' . $id . ')');
+
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'delete', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid), array('0' => array('folder' => $folderid, 'id' => $id)));
+
+    if ($response)
+    {
+      return true;
+    }
+    
     return false;
   }
 
@@ -308,9 +317,19 @@ class OXEmailSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
    */
-  public function MoveMessage($folderid, $id, $newfolderid) {
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::MoveMessage(' . $folderid . ', ' . $id . '...)');
+  public function MoveMessage($folder, $id, $newfolderid) {
+    $folderid = $folder -> serverid;
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::MoveMessage(' . $folderid . ', ' . $id . ', ' . $newfolderid . ')');
+
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'id' => $id, 'folder' => $folderid), array('folder_id' => $newfolderid));
+
+    if ($response) {
+      return true;
+    }
+
     return false;
+
   }
 
   /**
