@@ -151,19 +151,26 @@ class OXEmailSync {
      public $sender;
 
      */
+     
+    $bodypreference = $contentparameters -> GetBodyPreference();
+    if ($bodypreference !== false) {
+      $bpReturnType = Utils::GetBodyPreferenceBestMatch($bodypreference);
+    }
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): bpReturnType: ' . $bpReturnType);
+
     $output = new SyncMail();
 
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): ' . 'GetMessage eMail');
     $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'unseen' => 'true', ));
 
     foreach ($response["data"]["to"] as &$to) {
-      ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): ' . 'MYRESPONSE ' . print_r($to, true));
       $output -> to[] = $to[1];
     }
 
     foreach ($response["data"]["from"] as &$from) {
       $output -> from = $from[1];
     }
+
+    $output -> reply_to = array();
 
     //OX 0 - no prio, 2 - high, 1 - most important, 3 - normal, 5 - lowest
     //AS 0 - low, 1 - normal, 2 - important
@@ -181,36 +188,58 @@ class OXEmailSync {
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): Priority is "Low"');
     }
 
-    #ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage('.$folderid.', '.$id.'): '.'MYRESPONSE '.print_r($response, true));
 
-    # $output->from[] = $response["data"]["from"][0][1];
-    #$output->from		 = "fabian@eideo.de"; #$from[0][1];
     $output -> subject = $response["data"]["subject"];
-    #$output->read    = isset($response["data"]["unseen"]) == true ? true : false;
     $output -> read = array_key_exists("unseen", $response["data"]) && $response["data"]["unseen"] == "true" ? false : true;
     $output -> datereceived = $this -> timestampOXtoPHP($response["data"]["received_date"]);
 
     foreach ($response["data"]["attachments"] as $attachment) {
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): Attachment "' . $attachment['id'] . '" has Contenttype "' . $attachment['content_type'] . '"');
 
-      // Extract text/html an text/plain parts:
+      // Extract text/html and text/plain parts:
       $textPlain = "";
       $textHtml = "";
       if ($attachment['content_type'] == "text/plain") {
-        $textPlain = Utils::ConvertHtmlToText(str_replace("<br>", "\n", $attachment['content'])); // str_replace("<br>", "\n", $attachment['content']);
+        $textPlain = html_entity_decode(str_replace("<br>", "\n", $attachment['content']), ENT_NOQUOTES, 'UTF-8');
+        // OX sends the Umlauts as HTML-Tags. So we mus convert them :(.
       } else if ($attachment['content_type'] == "text/html") {
         $textHtml = $attachment['content'];
       }
     }
 
-    // AS-Version >=12 supports HTML-Messages and html-ContentPart was found:
-    if (Request::GetProtocolVersion() >= 12.0 && !empty($textHtml)) {
+    // Does our client understand AS-Version >= 12.0 ?
+    if (Request::GetProtocolVersion() >= 12.0 && $bpReturnType == SYNC_BODYPREFERENCE_MIME) {
       $output -> asbody = new SyncBaseBody();
-      $output -> asbody -> data = $textHtml; //  "<b>fett</b>";
-      // $textHtml;
+
+      // For MIME-Message we need to get the Mail in "raw":
+      $MIMEresponse = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'unseen' => 'true', 'src' => 'true'));
+      ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): MIME-Response: "' . print_r($MIMEresponse, true));
+
+      $output -> asbody -> data = $MIMEresponse["data"];
+      $output -> asbody -> type = SYNC_BODYPREFERENCE_MIME;
+      $output -> nativebodytype = SYNC_BODYPREFERENCE_MIME;
+      $output -> asbody -> estimatedDataSize = strlen($output -> asbody -> data);
+      $output -> messageclass = "IPM.Note";
+      $output -> internetcpid = INTERNET_CPID_UTF8;
+      $output -> contentclass = "urn:content-classes:message";
+
+      $truncsize = Utils::GetTruncSize($contentparameters -> GetTruncation());
+      if (strlen($output -> asbody -> data) > $truncsize) {
+        $output -> asbody -> data = Utils::Utf8_truncate($output -> asbody -> data, $truncsize);
+        $output -> asbody -> truncated = 1;
+      }
+
+    } else if (Request::GetProtocolVersion() >= 12.0 && !empty($textHtml) && $bpReturnType == SYNC_BODYPREFERENCE_HTML) {
+      // HTML-Mails:
+      $output -> asbody = new SyncBaseBody();
+
+      $output -> asbody -> data = $textHtml;
       $output -> asbody -> type = SYNC_BODYPREFERENCE_HTML;
       $output -> nativebodytype = SYNC_BODYPREFERENCE_HTML;
       $output -> asbody -> estimatedDataSize = strlen($output -> asbody -> data);
+      $output -> messageclass = "IPM.Note";
+      $output -> internetcpid = INTERNET_CPID_UTF8;
+      $output -> contentclass = "urn:content-classes:message";
 
       $truncsize = Utils::GetTruncSize($contentparameters -> GetTruncation());
       if (strlen($output -> asbody -> data) > $truncsize) {
@@ -234,8 +263,10 @@ class OXEmailSync {
     } else {
       // Default action is to only send the textPlain-Part via AS2.5
       $output -> body = $textPlain;
+      $output -> nativebodytype = SYNC_BODYPREFERENCE_PLAIN;
     }
 
+    // ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . ') Output: ' . print_r($output, true));
     return $output;
 
   }
@@ -388,7 +419,29 @@ class OXEmailSync {
    */
   public function SendMail($sm) {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail()');
-    return false;
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Request: ' . print_r($sm, true));
+
+    $mobj = new Mail_mimeDecode($sm -> mime);
+    $message = $mobj -> decode(array('decode_headers' => true, 'decode_bodies' => true, 'include_bodies' => true, 'charset' => 'utf-8'));
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() mobj: ' . print_r($message, true));
+
+    $newMail = array('from' => $message -> headers['from'], 'to' => isset($message -> headers['to']) ? $message -> headers['to'] : "", 'cc' => isset($message -> headers['cc']) ? $message -> headers['cc'] : "", 'bcc' => isset($message -> headers['bcc']) ? $message -> headers['bcc'] : "", 'subject' => isset($message -> headers['subject']) ? $message -> headers['subject'] : "<No Subject>", 'priority' => "3", 'attachments' => array(), // Will be filled later.
+    );
+
+    // Do we have more than one parts?
+    if (isset($message -> parts)) {
+      // ToDo: I dont know - thinking ;-).
+    } else if ($message -> ctype_primary == "text" && $message -> ctype_secondary == "plain") {
+      // This message is only a text/plain-Email.
+      $newMail['attachments'][] = array('content_type' => 'text/plain', 'content' => nl2br(str_replace("\r\n", "\n", $message -> body)), // remove carriage-returns from body
+      );
+    }
+
+    $response = $this -> OXConnector -> OXreqPOSTforSendMail('/ajax/mail?action=new&session=' . $this -> OXConnector -> getSession(), json_encode($newMail));
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Respone: ' . print_r($response, true));
+
+    return true;
   }
 
   /**

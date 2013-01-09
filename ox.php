@@ -434,7 +434,8 @@ class BackendOX extends BackendDiff {
    */
   public function SendMail($sm) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::SendMail()');
-    return false;
+    
+    return $this->EmailSync->SendMail($sm);
   }
 
   /**
