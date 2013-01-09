@@ -17,9 +17,11 @@ class OXEmailSync {
   private $cookiejar = true;
   private $root_folder = array();
   private $OXConnector;
+  private $OXUtils;
 
-  public function OXEmailSync($OXConnector) {
+  public function OXEmailSync($OXConnector, $OXUtils) {
     $this -> OXConnector = $OXConnector;
+    $this -> OXUtils = $OXUtils;
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync initialized.');
   }
 
@@ -74,10 +76,10 @@ class OXEmailSync {
     $messages = array();
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Syncing eMail-Folder');
-    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'all', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'columns' => '600,611,610', //objectID�|flags|date
+    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'all', 'session' => $this -> OXConnector -> getSession(), 'sort' => '610', 'order' => 'desc', 'folder' => $folderid, 'columns' => '600,611,610', //objectID�|flags|date
     ));
 
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Response: ' . print_r($response, true));
+    // ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Response: ' . print_r($response, true));
 
     foreach ($response["data"] as &$mail) {
       $message = array();
@@ -86,6 +88,11 @@ class OXEmailSync {
       # $message["mod"] = $this->timestampOXtoPHP($mail[2]);
       $message["mod"] = 0;
       $messages[] = $message;
+
+      // respect the cutoffdate
+      if ($this -> OXUtils -> timestampOXtoPHP($mail[2]) < $cutoffdate) {
+        break;
+      }
     }
 
     return is_array($messages) ? $messages : false;
@@ -151,7 +158,7 @@ class OXEmailSync {
      public $sender;
 
      */
-     
+
     $bodypreference = $contentparameters -> GetBodyPreference();
     if ($bodypreference !== false) {
       $bpReturnType = Utils::GetBodyPreferenceBestMatch($bodypreference);
@@ -187,7 +194,6 @@ class OXEmailSync {
       $output -> importance = 0;
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): Priority is "Low"');
     }
-
 
     $output -> subject = $response["data"]["subject"];
     $output -> read = array_key_exists("unseen", $response["data"]) && $response["data"]["unseen"] == "true" ? false : true;

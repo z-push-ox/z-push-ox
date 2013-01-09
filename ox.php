@@ -63,7 +63,7 @@ class BackendOX extends BackendDiff {
         $this -> OXConnector -> setSession($response["session"]);
         ZLog::Write(LOGLEVEL_DEBUG, "BackendOX::Logon() - Login successfully, get SessionID: " . $this -> session);
 
-        $this -> EmailSync = new OXEmailSync($this -> OXConnector);
+        $this -> EmailSync = new OXEmailSync($this -> OXConnector, $this -> OXUtils);
         $this -> ContactSync = new OXContactSync($this -> OXConnector, $this -> OXUtils);
         $this -> CalendarSync = new OXCalendarSync($this -> OXConnector, $this -> OXUtils);
 
