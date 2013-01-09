@@ -434,9 +434,43 @@ class OXEmailSync {
     $newMail = array('from' => $message -> headers['from'], 'to' => isset($message -> headers['to']) ? $message -> headers['to'] : "", 'cc' => isset($message -> headers['cc']) ? $message -> headers['cc'] : "", 'bcc' => isset($message -> headers['bcc']) ? $message -> headers['bcc'] : "", 'subject' => isset($message -> headers['subject']) ? $message -> headers['subject'] : "<No Subject>", 'priority' => "3", 'attachments' => array(), // Will be filled later.
     );
 
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Part-Count: ' . count($message -> parts));
+
     // Do we have more than one parts?
-    if (isset($message -> parts)) {
-      // ToDo: I dont know - thinking ;-).
+    if (count($message -> parts) >= 1) {
+
+      // Sending "easy" HTML-Emails is working just fine.
+      //
+      // BUT:
+      // This is a little bit buggy at the moment. There are some variations that a part can 
+      // have some other parts too, like a hierachy. Thinking....
+      //
+      // Also missing is:
+      //   Answer + Forward-Flag
+      //
+
+      $htmlBody = "";
+      $plainBody = "";
+
+      foreach ($message->parts as $id => $part) {
+        ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Adding Part to mail with content_type: ' . $part -> headers['content-type']);
+
+        if ($part -> ctype_primary != "text") {
+          // Adds attachments to the mail.
+          $newMail['attachments'][] = array('content_type' => $part -> headers['content-type'], 'content' => $part -> body, // remove carriage-returns from body
+          );
+        } else if ($part -> ctype_primary == "text" && $part -> ctype_secondary == "html") {
+          $htmlBody = $part -> body;
+        } else if ($part -> ctype_primary == "text" && $part -> ctype_secondary == "plain") {
+          $plainBody = $part -> body;
+        }
+      }
+
+      if (!empty($htmlBody)) {
+        $newMail['attachments'][] = array('content_type' => 'ALTERNATIVE', 'content' => nl2br(str_replace("\r\n", "\n", $htmlBody)), // remove carriage-returns from body
+        );
+      }
+
     } else if ($message -> ctype_primary == "text" && $message -> ctype_secondary == "plain") {
       // This message is only a text/plain-Email.
       $newMail['attachments'][] = array('content_type' => 'text/plain', 'content' => nl2br(str_replace("\r\n", "\n", $message -> body)), // remove carriage-returns from body
