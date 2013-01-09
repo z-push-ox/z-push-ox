@@ -98,7 +98,6 @@ class OXConnector {
     $data .= "--" . $delimiter . "\r\n";
     $data .= 'Content-Disposition: form-data; name="json_0"'."\r\n";
     $data .= "\r\n";
-    //$data .= '{"from":"Test User <testuser@eideo.de>","to":"Fabian Kuran <fabian@eideo.de>","cc":"","bcc":"","subject":"Testmail over SendMail()","priority":"3","attachments":[{"content_type":"ALTERNATIVE","content":"<html><head><style type=\\u0022text\/css\\u0022>FB_Addon_TelNo{\\u000aheight:15px !important;\\u000a white-space: nowrap !important;\\u000a background-color: #0ff0ff;}<\/style><\/head><body style=\\u0022\\u0022><div>ThisistatestoverSendMail<\/div><\/body><\/html>"}]}';
     $data .= $mailData;
     $data .= "\r\n--" . $delimiter . "--\r\n";
 
