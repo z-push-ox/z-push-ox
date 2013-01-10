@@ -427,61 +427,20 @@ class OXEmailSync {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail()');
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Request: ' . print_r($sm, true));
 
-    $mobj = new Mail_mimeDecode($sm -> mime);
-    $message = $mobj -> decode(array('decode_headers' => true, 'decode_bodies' => true, 'include_bodies' => true, 'charset' => 'utf-8'));
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() mobj: ' . print_r($message, true));
+    /*
+     * ToDo:
+     *  Flags:
+     *    - Answer
+     *    - Forward
+     * 
+     */
 
-    $newMail = array('from' => $message -> headers['from'], 'to' => isset($message -> headers['to']) ? $message -> headers['to'] : "", 'cc' => isset($message -> headers['cc']) ? $message -> headers['cc'] : "", 'bcc' => isset($message -> headers['bcc']) ? $message -> headers['bcc'] : "", 'subject' => isset($message -> headers['subject']) ? $message -> headers['subject'] : "<No Subject>", 'priority' => "3", 'attachments' => array(), // Will be filled later.
-    );
-
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Part-Count: ' . count($message -> parts));
-
-    // Do we have more than one parts?
-    if (count($message -> parts) >= 1) {
-
-      // Sending "easy" HTML-Emails is working just fine.
-      //
-      // BUT:
-      // This is a little bit buggy at the moment. There are some variations that a part can 
-      // have some other parts too, like a hierachy. Thinking....
-      //
-      // Also missing is:
-      //   Answer + Forward-Flag
-      //
-
-      $htmlBody = "";
-      $plainBody = "";
-
-      foreach ($message->parts as $id => $part) {
-        ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Adding Part to mail with content_type: ' . $part -> headers['content-type']);
-
-        if ($part -> ctype_primary != "text") {
-          // Adds attachments to the mail.
-          $newMail['attachments'][] = array('content_type' => $part -> headers['content-type'], 'content' => $part -> body, // remove carriage-returns from body
-          );
-        } else if ($part -> ctype_primary == "text" && $part -> ctype_secondary == "html") {
-          $htmlBody = $part -> body;
-        } else if ($part -> ctype_primary == "text" && $part -> ctype_secondary == "plain") {
-          $plainBody = $part -> body;
-        }
-      }
-
-      if (!empty($htmlBody)) {
-        $newMail['attachments'][] = array('content_type' => 'ALTERNATIVE', 'content' => nl2br(str_replace("\r\n", "\n", $htmlBody)), // remove carriage-returns from body
-        );
-      }
-
-    } else if ($message -> ctype_primary == "text" && $message -> ctype_secondary == "plain") {
-      // This message is only a text/plain-Email.
-      $newMail['attachments'][] = array('content_type' => 'text/plain', 'content' => nl2br(str_replace("\r\n", "\n", $message -> body)), // remove carriage-returns from body
-      );
-    }
-
-    $response = $this -> OXConnector -> OXreqPOSTforSendMail('/ajax/mail?action=new&session=' . $this -> OXConnector -> getSession(), json_encode($newMail));
-
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Respone: ' . print_r($response, true));
+    // The easiest way is to Send the complete MIME-Message directly to OX.
+    $response = $this -> OXConnector -> OXreqPUTforSendMail('/ajax/mail', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), $sm -> mime);
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() PUT-Respone: ' . print_r($response, true));
 
     return true;
+
   }
 
   /**
