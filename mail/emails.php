@@ -103,6 +103,13 @@ class OXEmailSync {
     // ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Response: ' . print_r($response, true));
 
     foreach ($response["data"] as &$mail) {
+
+      $deleteCheck = $mail[1] & 2; // See http://php.net/manual/de/language.operators.bitwise.php
+      if ($deleteCheck == 2) {
+        // The "deleted"-Flag is set. Do not synchronize this mail to the device.
+        continue;
+      }
+
       $message = array();
       $message["id"] = $mail[0];
       $message["flags"] = $mail[1];
