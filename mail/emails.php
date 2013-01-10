@@ -464,7 +464,7 @@ class OXEmailSync {
       }
 
       // Set the flag:
-      $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $sourceFolder, 'id' => $sourceId), array('flags' => "$flag", 'value' => 'true'));
+      $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $sourceFolder, 'id' => $sourceId), array('set_flags' => "$flag", 'value' => 'true'));
 
     }
 
