@@ -48,7 +48,7 @@ class OXConnector {
 
   public function OXreq($requestOBJ, $returnResponseObject) {
     $requestOBJ -> setCookieJar($this -> cookiejar);
-    $requestOBJ -> setHeader('User-Agent: Z-Push-OX 0.9');
+    $requestOBJ -> setHeader('User-Agent: z-push-ox (Version '.BackendOX::getBackendVersion().')');
     $response = $requestOBJ -> send();
     $this -> cookiejar = $requestOBJ -> getCookieJar();
     if ($returnResponseObject) {

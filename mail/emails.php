@@ -18,11 +18,32 @@ class OXEmailSync {
   private $root_folder = array();
   private $OXConnector;
   private $OXUtils;
+  private $displayName;
+  private $defaultSenderAddress;
 
   public function OXEmailSync($OXConnector, $OXUtils) {
     $this -> OXConnector = $OXConnector;
     $this -> OXUtils = $OXUtils;
+
+    $response = $this -> OXConnector -> OXreqGET('/ajax/config/mail/sendaddress', array('session' => $this -> OXConnector -> getSession(), ));
+
+    if ($response)
+      $this -> defaultSenderAddress = $response['data'];
+
+    $response = $this -> OXConnector -> OXreqGET('/ajax/config/identifier', array('session' => $this -> OXConnector -> getSession(), ));
+
+    if ($response) {
+      $userID = $response['data'];
+      $response = $this -> OXConnector -> OXreqGET('/ajax/user', array('action' => 'get', 'id' => $userID, 'session' => $this -> OXConnector -> getSession(), ));
+      if ($response) {
+        $this -> displayName = $response['data']['display_name'];
+      }
+    }
+
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync initialized.');
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync DefaultSenderAddress: ' . $this -> defaultSenderAddress);
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync DisplayName: ' . $this -> displayName);
+
   }
 
   /**
@@ -432,11 +453,25 @@ class OXEmailSync {
      *  Flags:
      *    - Answer
      *    - Forward
-     * 
+     *
      */
 
+    $message = $sm -> mime;
+
+    if (!empty($this -> defaultSenderAddress)) {
+      // Setting from to the defaultSenderAddress incl. the displayName.
+      $message = preg_replace("/From:.*\n/i", 'From: ' . $this -> displayName . ' <' . $this -> defaultSenderAddress . ">\n", $message);
+    }
+
+    // Adding the X-Mailer-Header:
+    $message = "X-Mailer: z-push-ox (Version ".BackendOX::getBackendVersion().")\n" . $message;
+
+     /*
+     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() My Mime Message: ' . print_r($message, true));
+     return true; */
+
     // The easiest way is to Send the complete MIME-Message directly to OX.
-    $response = $this -> OXConnector -> OXreqPUTforSendMail('/ajax/mail', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), $sm -> mime);
+    $response = $this -> OXConnector -> OXreqPUTforSendMail('/ajax/mail', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), $message);
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() PUT-Respone: ' . print_r($response, true));
 
     return true;

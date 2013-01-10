@@ -501,6 +501,11 @@ class BackendOX extends BackendDiff {
 
     return false;
   }
+  
+  public static function getBackendVersion()
+  {
+    return "0.9";
+  }
 
 }
 ?>
