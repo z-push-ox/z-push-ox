@@ -448,27 +448,33 @@ class OXEmailSync {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail()');
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Request: ' . print_r($sm, true));
 
-    /*
-     * ToDo:
-     *  Flags:
-     *    - Answer
-     *    - Forward
-     *
-     */
-
     $message = $sm -> mime;
+    $flags = "";
+
+    if (!empty($sm -> source)) {
+      $sourceFolder = $sm -> source -> folderid;
+      $sourceId = $sm -> source -> itemid;
+
+      if ($sm -> replyflag == "1") {
+        // Mail was answered
+        $flag = 1;
+      } else if ($sm -> forwardflag == "1") {
+        // Mail was forwarded
+        $flag = 256;
+      }
+
+      // Set the flag:
+      $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $sourceFolder, 'id' => $sourceId), array('flags' => "$flag", 'value' => 'true'));
+
+    }
 
     if (!empty($this -> defaultSenderAddress)) {
-      // Setting from to the defaultSenderAddress incl. the displayName.
+      // Setting "From"-Header to the defaultSenderAddress incl. the displayName.
       $message = preg_replace("/From:.*\n/i", 'From: ' . $this -> displayName . ' <' . $this -> defaultSenderAddress . ">\n", $message);
     }
 
     // Adding the X-Mailer-Header:
-    $message = "X-Mailer: z-push-ox (Version ".BackendOX::getBackendVersion().")\n" . $message;
-
-     /*
-     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() My Mime Message: ' . print_r($message, true));
-     return true; */
+    $message = "X-Mailer: z-push-ox (Version " . BackendOX::getBackendVersion() . ")\n" . $message;
 
     // The easiest way is to Send the complete MIME-Message directly to OX.
     $response = $this -> OXConnector -> OXreqPUTforSendMail('/ajax/mail', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), $message);
