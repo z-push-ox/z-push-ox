@@ -289,7 +289,10 @@ class BackendOX extends BackendDiff {
    */
   public function DeleteFolder($id, $parentid) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeFolder(' . $id . ',' . $parentid . ')');
-    return false;
+    
+    $folder = $this -> GetFolder($id);
+
+    return $this -> callModuleHandlerForFolder("DeleteFolder", $folder, array($folder, $id));
   }
 
   /**

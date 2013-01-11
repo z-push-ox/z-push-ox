@@ -276,5 +276,25 @@ class OXContactSync
     ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::SetReadFlag(' . $folderid . ', ' . $id . ', ' . $flags . ')');
   }
 
+  /**
+   * Deletes a folder
+   *
+   * @param folder        $folder
+   * @param string        $parent         is normally false
+   *
+   * @access public
+   * @return boolean                      status - false if e.g. does not exist
+   * @throws StatusException              could throw specific SYNC_FSSTATUS_* exceptions
+   *
+   */
+  public function DeleteFolder( $folder, $parentid )
+  {
+    $id = $folder->serverid;
+    
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::DeleteFolder(' . $id . ',' . $parentid . ')');
+
+    return true;
+  }
+
 }
 ?>

@@ -236,6 +236,25 @@ class OXCalendarSync
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::SetReadFlag(' . $folderid . ', ' . $id . ', ' . $flags . ')');
   }
 
+  /**
+   * Deletes a folder
+   *
+   * @param folder        $folder
+   * @param string        $parent         is normally false
+   *
+   * @access public
+   * @return boolean                      status - false if e.g. does not exist
+   * @throws StatusException              could throw specific SYNC_FSSTATUS_* exceptions
+   *
+   */
+  public function DeleteFolder( $folder, $parentid )
+  {
+    $id = $folder->serverid;
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::DeleteFolder(' . $id . ',' . $parentid . ')');
+
+    return true;
+  }
+
   private function recurrenceOX2Async( $data )
   {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceOX2Async(' . json_encode($data) . ')');

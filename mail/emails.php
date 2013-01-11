@@ -71,22 +71,7 @@ class OXEmailSync
     return false;
   }
 
-  /**
-   * Deletes a folder
-   *
-   * @param string        $id
-   * @param string        $parent         is normally false
-   *
-   * @access public
-   * @return boolean                      status - false if e.g. does not exist
-   * @throws StatusException              could throw specific SYNC_FSSTATUS_* exceptions
-   *
-   */
-  public function DeleteFolder( $id, $parentid )
-  {
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::ChangeFolder(' . $id . ',' . $parentid . ')');
-    return false;
-  }
+
 
   /**
    * Returns a list (array) of messages
@@ -598,6 +583,38 @@ class OXEmailSync
   public function GetAttachmentData( $attname )
   {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetAttachmentData(' . $attname . ')');
+    return false;
+  }
+
+  /**
+   * Deletes a folder
+   *
+   * @param folder        $folder
+   * @param string        $parent         is normally false
+   *
+   * @access public
+   * @return boolean                      status - false if e.g. does not exist
+   * @throws StatusException              could throw specific SYNC_FSSTATUS_* exceptions
+   *
+   */
+  public function DeleteFolder( $folder, $parentid )
+  {
+    $id = $folder -> serverid;
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::DeleteFolder(' . $id . ',' . $parentid . ')');
+
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/folders', array(
+      'action' => 'delete',
+      'session' => $this -> OXConnector -> getSession(),
+      'allowed_modules' => 'mail',
+    ), array($id));
+
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::DeleteFolder(' . $id . ',' . $parentid . ') PUT-Response: '.print_r($response, true));
+
+    if ($response)
+    {
+      return true;
+    }
+
     return false;
   }
 
