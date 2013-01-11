@@ -10,7 +10,8 @@ require_once ('include/z_RFC822.php');
 require_once ('lib/utils/timezoneutil.php');
 require_once 'HTTP/Request2.php';
 
-class OXEmailSync {
+class OXEmailSync
+{
 
   private $UserID = 0;
   private $session = false;
@@ -21,7 +22,8 @@ class OXEmailSync {
   private $displayName;
   private $defaultSenderAddress;
 
-  public function OXEmailSync($OXConnector, $OXUtils) {
+  public function OXEmailSync( $OXConnector, $OXUtils )
+  {
     $this -> OXConnector = $OXConnector;
     $this -> OXUtils = $OXUtils;
 
@@ -34,7 +36,11 @@ class OXEmailSync {
 
     if ($response) {
       $userID = $response['data'];
-      $response = $this -> OXConnector -> OXreqGET('/ajax/user', array('action' => 'get', 'id' => $userID, 'session' => $this -> OXConnector -> getSession(), ));
+      $response = $this -> OXConnector -> OXreqGET('/ajax/user', array(
+        'action' => 'get',
+        'id' => $userID,
+        'session' => $this -> OXConnector -> getSession(),
+      ));
       if ($response) {
         $this -> displayName = $response['data']['display_name'];
       }
@@ -59,7 +65,8 @@ class OXEmailSync {
    * @throws StatusException              could throw specific SYNC_FSSTATUS_* exceptions
    *
    */
-  public function ChangeFolder($folderid, $oldid, $displayname, $type) {
+  public function ChangeFolder( $folderid, $oldid, $displayname, $type )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::ChangeFolder(' . $folderid . ',' . $oldid . ',' . $displayname . ',' . $type . ')');
     return false;
   }
@@ -75,7 +82,8 @@ class OXEmailSync {
    * @throws StatusException              could throw specific SYNC_FSSTATUS_* exceptions
    *
    */
-  public function DeleteFolder($id, $parentid) {
+  public function DeleteFolder( $id, $parentid )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::ChangeFolder(' . $id . ',' . $parentid . ')');
     return false;
   }
@@ -89,7 +97,8 @@ class OXEmailSync {
    * @access public
    * @return array/false  array with messages or false if folder is not available
    */
-  public function GetMessageList($folder, $cutoffdate) {
+  public function GetMessageList( $folder, $cutoffdate )
+  {
 
     $folderid = $folder -> serverid;
 
@@ -97,14 +106,21 @@ class OXEmailSync {
     $messages = array();
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Syncing eMail-Folder');
-    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'all', 'session' => $this -> OXConnector -> getSession(), 'sort' => '610', 'order' => 'desc', 'folder' => $folderid, 'columns' => '600,611,610', //objectID�|flags|date
+    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array(
+      'action' => 'all',
+      'session' => $this -> OXConnector -> getSession(),
+      'sort' => '610',
+      'order' => 'desc',
+      'folder' => $folderid,
+      'columns' => '600,611,610', //objectID�|flags|date
     ));
 
     // ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Response: ' . print_r($response, true));
 
     foreach ($response["data"] as &$mail) {
 
-      $deleteCheck = $mail[1] & 2; // See http://php.net/manual/de/language.operators.bitwise.php
+      $deleteCheck = $mail[1] & 2;
+      // See http://php.net/manual/de/language.operators.bitwise.php
       if ($deleteCheck == 2) {
         // The "deleted"-Flag is set. Do not synchronize this mail to the device.
         continue;
@@ -137,7 +153,8 @@ class OXEmailSync {
    * @access public
    * @return object/false     false if the message could not be retrieved
    */
-  public function GetMessage($folder, $id, $contentparameters) {
+  public function GetMessage( $folder, $id, $contentparameters )
+  {
 
     $folderid = $folder -> serverid;
 
@@ -193,9 +210,15 @@ class OXEmailSync {
     }
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): bpReturnType: ' . $bpReturnType);
 
-    $output = new SyncMail();
+    $output = new SyncMail( );
 
-    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'unseen' => 'true', ));
+    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array(
+      'action' => 'get',
+      'session' => $this -> OXConnector -> getSession(),
+      'folder' => $folderid,
+      'id' => $id,
+      'unseen' => 'true',
+    ));
 
     foreach ($response["data"]["to"] as &$to) {
       $output -> to[] = $to[1];
@@ -209,9 +232,18 @@ class OXEmailSync {
 
     //OX 0 - no prio, 2 - high, 1 - most important, 3 - normal, 5 - lowest
     //AS 0 - low, 1 - normal, 2 - important
-    $normalPrio = array(0, 3);
-    $highPrio = array(1, 2);
-    $lowPrio = array(4, 5);
+    $normalPrio = array(
+      0,
+      3
+    );
+    $highPrio = array(
+      1,
+      2
+    );
+    $lowPrio = array(
+      4,
+      5
+    );
     if (in_array($response["data"]["priority"], $normalPrio)) {
       $output -> importance = 1;
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): Priority is "Normal"');
@@ -243,10 +275,17 @@ class OXEmailSync {
 
     // Does our client understand AS-Version >= 12.0 ?
     if (Request::GetProtocolVersion() >= 12.0 && $bpReturnType == SYNC_BODYPREFERENCE_MIME) {
-      $output -> asbody = new SyncBaseBody();
+      $output -> asbody = new SyncBaseBody( );
 
       // For MIME-Message we need to get the Mail in "raw":
-      $MIMEresponse = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'unseen' => 'true', 'src' => 'true'));
+      $MIMEresponse = $this -> OXConnector -> OXreqGET('/ajax/mail', array(
+        'action' => 'get',
+        'session' => $this -> OXConnector -> getSession(),
+        'folder' => $folderid,
+        'id' => $id,
+        'unseen' => 'true',
+        'src' => 'true'
+      ));
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): MIME-Response: "' . print_r($MIMEresponse, true));
 
       $output -> asbody -> data = $MIMEresponse["data"];
@@ -265,7 +304,7 @@ class OXEmailSync {
 
     } else if (Request::GetProtocolVersion() >= 12.0 && !empty($textHtml) && $bpReturnType == SYNC_BODYPREFERENCE_HTML) {
       // HTML-Mails:
-      $output -> asbody = new SyncBaseBody();
+      $output -> asbody = new SyncBaseBody( );
 
       $output -> asbody -> data = $textHtml;
       $output -> asbody -> type = SYNC_BODYPREFERENCE_HTML;
@@ -283,7 +322,7 @@ class OXEmailSync {
 
     } else if (Request::GetProtocolVersion() >= 12.0 && !empty($textPlain)) {
       // Text-Mails:
-      $output -> asbody = new SyncBaseBody();
+      $output -> asbody = new SyncBaseBody( );
       $output -> asbody -> data = $textPlain;
       // $textHtml;
       $output -> asbody -> type = SYNC_BODYPREFERENCE_PLAIN;
@@ -314,7 +353,8 @@ class OXEmailSync {
    * @access public
    * @return array
    */
-  public function StatMessage($folder, $id) {
+  public function StatMessage( $folder, $id )
+  {
 
     $folderid = $folder -> serverid;
 
@@ -326,8 +366,14 @@ class OXEmailSync {
     // always 'read'
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::StatMessage(' . $folderid . ', ' . $id . '): ' . 'StatMessage eMail');
-    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'columns' => '600,611', // id, flags
-    'unseen' => 'true', ));
+    $response = $this -> OXConnector -> OXreqGET('/ajax/mail', array(
+      'action' => 'get',
+      'session' => $this -> OXConnector -> getSession(),
+      'folder' => $folderid,
+      'id' => $id,
+      'columns' => '600,611', // id, flags
+      'unseen' => 'true',
+    ));
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::StatMessage(' . $folderid . ', ' . $id . '): ' . 'StatResponse ' . print_r($response, true));
     # foreach ($response["data"] as &$mail) {
@@ -357,7 +403,8 @@ class OXEmailSync {
    * @return array                        same return value as StatMessage()
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function ChangeMessage($folderid, $id, $message) {
+  public function ChangeMessage( $folderid, $id, $message )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::ChangeMessage(' . $folderid . ', ' . $id . ', message: ' . json_encode($message) . ')');
     $folder = $this -> GetFolder($folderid);
     return false;
@@ -374,7 +421,8 @@ class OXEmailSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function SetReadFlag($folder, $id, $flags) {
+  public function SetReadFlag( $folder, $id, $flags )
+  {
 
     $folderid = $folder -> serverid;
 
@@ -382,7 +430,15 @@ class OXEmailSync {
 
     $value = $flags == 0 ? 'false' : 'true';
 
-    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id), array('flags' => '32', 'value' => $value));
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array(
+      'action' => 'update',
+      'session' => $this -> OXConnector -> getSession(),
+      'folder' => $folderid,
+      'id' => $id
+    ), array(
+      'flags' => '32',
+      'value' => $value
+    ));
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SetReadFlag(' . $folderid . ', ' . $id . ', ' . $flags . ') Response: ' . print_r($response, true));
 
@@ -399,13 +455,21 @@ class OXEmailSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function DeleteMessage($folder, $id) {
+  public function DeleteMessage( $folder, $id )
+  {
 
     $folderid = $folder -> serverid;
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::DeleteMessage(' . $folderid . ', ' . $id . ')');
 
-    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'delete', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid), array('0' => array('folder' => $folderid, 'id' => $id)));
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array(
+      'action' => 'delete',
+      'session' => $this -> OXConnector -> getSession(),
+      'folder' => $folderid
+    ), array('0' => array(
+        'folder' => $folderid,
+        'id' => $id
+      )));
 
     if ($response) {
       return true;
@@ -426,12 +490,18 @@ class OXEmailSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
    */
-  public function MoveMessage($folder, $id, $newfolderid) {
+  public function MoveMessage( $folder, $id, $newfolderid )
+  {
     $folderid = $folder -> serverid;
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::MoveMessage(' . $folderid . ', ' . $id . ', ' . $newfolderid . ')');
 
-    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'id' => $id, 'folder' => $folderid), array('folder_id' => $newfolderid));
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array(
+      'action' => 'update',
+      'session' => $this -> OXConnector -> getSession(),
+      'id' => $id,
+      'folder' => $folderid
+    ), array('folder_id' => $newfolderid));
 
     if ($response) {
       return true;
@@ -451,7 +521,8 @@ class OXEmailSync {
    * @return boolean
    * @throws StatusException
    */
-  public function SendMail($sm) {
+  public function SendMail( $sm )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail()');
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() Request: ' . print_r($sm, true));
 
@@ -471,7 +542,15 @@ class OXEmailSync {
       }
 
       // Set the flag:
-      $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $sourceFolder, 'id' => $sourceId), array('set_flags' => "$flag", 'value' => 'true'));
+      $response = $this -> OXConnector -> OXreqPUT('/ajax/mail', array(
+        'action' => 'update',
+        'session' => $this -> OXConnector -> getSession(),
+        'folder' => $sourceFolder,
+        'id' => $sourceId
+      ), array(
+        'set_flags' => "$flag",
+        'value' => 'true'
+      ));
 
     }
 
@@ -484,7 +563,10 @@ class OXEmailSync {
     $message = "X-Mailer: z-push-ox (Version " . BackendOX::getBackendVersion() . ")\n" . $message;
 
     // The easiest way is to Send the complete MIME-Message directly to OX.
-    $response = $this -> OXConnector -> OXreqPUTforSendMail('/ajax/mail', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), $message);
+    $response = $this -> OXConnector -> OXreqPUTforSendMail('/ajax/mail', array(
+      'action' => 'new',
+      'session' => $this -> OXConnector -> getSession(),
+    ), $message);
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::SendMail() PUT-Respone: ' . print_r($response, true));
 
     return true;
@@ -497,7 +579,8 @@ class OXEmailSync {
    * @access public
    * @return string
    */
-  public function GetWasteBasket() {
+  public function GetWasteBasket( )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetWasteBasket()');
     return false;
   }
@@ -512,7 +595,8 @@ class OXEmailSync {
    * @return SyncItemOperationsAttachment
    * @throws StatusException
    */
-  public function GetAttachmentData($attname) {
+  public function GetAttachmentData( $attname )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetAttachmentData(' . $attname . ')');
     return false;
   }
@@ -524,18 +608,19 @@ class OXEmailSync {
    * @param int $destinationTimezone
    * @return int
    */
-  private function getTimezoneOffset($sourceTimezone, $destinationTimezone) {
+  private function getTimezoneOffset( $sourceTimezone, $destinationTimezone )
+  {
     if ($sourceTimezone === null) {
       $sourceTimezone = date_default_timezone_get();
     }
     if ($destinationTimezone === null) {
       $destinationTimezone = date_default_timezone_get();
     }
-    $sourceTimezone = new DateTimeZone($sourceTimezone);
-    $destinationTimezone = new DateTimeZone($destinationTimezone);
+    $sourceTimezone = new DateTimeZone( $sourceTimezone );
+    $destinationTimezone = new DateTimeZone( $destinationTimezone );
     $now = time();
-    $sourceDate = new DateTime("now", $sourceTimezone);
-    $destinationDate = new DateTime("now", $destinationTimezone);
+    $sourceDate = new DateTime( "now", $sourceTimezone );
+    $destinationDate = new DateTime( "now", $destinationTimezone );
     return $destinationTimezone -> getOffset($destinationDate) - $sourceTimezone -> getOffset($sourceDate);
   }
 
@@ -546,7 +631,8 @@ class OXEmailSync {
    * @param string $key
    * @param unknown $value
    */
-  private function _setValue($object, $key, $value) {
+  private function _setValue( $object, $key, $value )
+  {
     if (gettype($object) == 'array') {
       $object[$key] = $value;
     } else {
@@ -562,7 +648,8 @@ class OXEmailSync {
    * @param string $key
    * @return unknown
    */
-  private function _getValue($object, $key) {
+  private function _getValue( $object, $key )
+  {
     if (gettype($object) == 'array') {
       return $object[$key];
     } else {
@@ -574,7 +661,8 @@ class OXEmailSync {
    * Converts a php timestamp to a OX one
    *
    */
-  private function timestampPHPtoOX($phpstamp, $timezoneOffset = 0) {
+  private function timestampPHPtoOX( $phpstamp, $timezoneOffset = 0 )
+  {
     if ($phpstamp == null) {
       return null;
     }
@@ -586,7 +674,8 @@ class OXEmailSync {
    * Converts a OX timestamp to a php one
    *
    */
-  private function timestampOXtoPHP($oxstamp, $timezoneOffset = 0) {
+  private function timestampOXtoPHP( $oxstamp, $timezoneOffset = 0 )
+  {
     if (strlen($oxstamp) > 3) {
       $oxstamp = substr($oxstamp, 0, -3);
     } else {

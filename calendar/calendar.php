@@ -1,26 +1,46 @@
 <?php
 
-class OXCalendarSync {
+class OXCalendarSync
+{
 
-  private $mappingCalendarOXtoASYNC = array('strings' => array('title' => 'subject',
-  //'timezone' => 'timezone',
-  'uid' => 'uid',
-  //'organizer' => 'organizeremail',
-  'location' => 'location', 'note' => 'body', 'categories' => 'categories', ), 'dates' => array('start_date' => 'starttime', 'end_date' => 'endtime', ), 'booleans' => array('full_time' => 'alldayevent', ), 'timezone' => array('timezone' => 'timezone', ), );
+  private $mappingCalendarOXtoASYNC = array(
+    'strings' => array(
+      'title' => 'subject',
+      //'timezone' => 'timezone',
+      'uid' => 'uid',
+      //'organizer' => 'organizeremail',
+      'location' => 'location',
+      'note' => 'body',
+      'categories' => 'categories',
+    ),
+    'dates' => array(
+      'start_date' => 'starttime',
+      'end_date' => 'endtime',
+    ),
+    'booleans' => array('full_time' => 'alldayevent', ),
+    'timezone' => array('timezone' => 'timezone', ),
+  );
 
   private $mappingCalendarASYNCtoOX = array();
   // will be filled after login
 
-  private $mappingRecurrenceOXtoASYNC = array('strings' => array('interval' => 'interval', 'occurrences' => 'occurrences', 'days' => 'dayofweek',
-  //'day_in_month' => 'dayofmonth',
-  //'day_in_month' => 'weekofmonth',
-  //'month' => 'monthofyear', offset of one
-  ), 'dates' => array('until' => 'until', ), );
+  private $mappingRecurrenceOXtoASYNC = array(
+    'strings' => array(
+      'interval' => 'interval',
+      'occurrences' => 'occurrences',
+      'days' => 'dayofweek',
+      //'day_in_month' => 'dayofmonth',
+      //'day_in_month' => 'weekofmonth',
+      //'month' => 'monthofyear', offset of one
+    ),
+    'dates' => array('until' => 'until', ),
+  );
 
   private $mappingRecurrenceASYNCtoOX = array();
   // will be filled after login
 
-  public function OXCalendarSync($OXConnector, $OXUtils) {
+  public function OXCalendarSync( $OXConnector, $OXUtils )
+  {
     $this -> OXConnector = $OXConnector;
     $this -> OXUtils = $OXUtils;
     $this -> mappingRecurrenceASYNCtoOX = $this -> OXUtils -> reversemap($this -> mappingRecurrenceOXtoASYNC);
@@ -28,12 +48,20 @@ class OXCalendarSync {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync initialized.');
   }
 
-  public function GetMessageList($folderid, $cutoffdate) {
+  public function GetMessageList( $folderid, $cutoffdate )
+  {
 
     $folderid = $folder -> serverid;
 
-    $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array('action' => 'all', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'columns' => '1,5,', //objectID�| last modified
-    'start' => '0', 'end' => '2208988800000', 'recurrence_master' => 'true', ));
+    $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array(
+      'action' => 'all',
+      'session' => $this -> OXConnector -> getSession(),
+      'folder' => $folderid,
+      'columns' => '1,5,', //objectID�| last modified
+      'start' => '0',
+      'end' => '2208988800000',
+      'recurrence_master' => 'true',
+    ));
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessageList(folderid: ' . $folderid . '  folder: ' . $folder -> displayname . '  data: ' . json_encode($response) . ')');
     foreach ($response["data"] as &$event) {
       $message = array();
@@ -46,22 +74,30 @@ class OXCalendarSync {
     return $messages;
   }
 
-  public function GetMessage($folder, $id, $contentparameters) {
+  public function GetMessage( $folder, $id, $contentparameters )
+  {
 
     $folderid = $folder -> serverid;
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', ...)');
 
-    $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'id' => $id, 'folder' => $folderid, 'recurrence_master' => 'true', ));
+    $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array(
+      'action' => 'get',
+      'session' => $this -> OXConnector -> getSession(),
+      'id' => $id,
+      'folder' => $folderid,
+      'recurrence_master' => 'true',
+    ));
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(appointment data: ' . json_encode($response["data"]) . ')');
-    $event = $this -> mapValues($response["data"], new SyncAppointment(), $this -> mappingCalendarOXtoASYNC, 'php');
+    $event = $this -> mapValues($response["data"], new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php');
     $event -> timezone = 'UTC';
     $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
     return $event;
   }
 
-  public function StatMessage($folder, $id) {
+  public function StatMessage( $folder, $id )
+  {
     $folderid = $folder -> serverid;
 
     // Default values:
@@ -71,7 +107,13 @@ class OXCalendarSync {
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::StatMessage(' . $folderid . ', ' . $id . ', ...)');
 
-    $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array('action' => 'get', 'session' => $this -> OXConnector -> getSession(), 'id' => $id, 'folder' => $folderid, 'recurrence_master' => 'true', ));
+    $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array(
+      'action' => 'get',
+      'session' => $this -> OXConnector -> getSession(),
+      'id' => $id,
+      'folder' => $folderid,
+      'recurrence_master' => 'true',
+    ));
     $message["mod"] = $response["data"]["last_modified"];
     return $message;
   }
@@ -88,7 +130,8 @@ class OXCalendarSync {
    * @return array                        same return value as StatMessage()
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function ChangeMessage($folder, $id, $message) {
+  public function ChangeMessage( $folder, $id, $message )
+  {
 
     $folderid = $folder -> serverid;
 
@@ -96,12 +139,18 @@ class OXCalendarSync {
 
     if (!$id) {
       //id is not set => create object
-      $createResponse = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array('action' => 'new', 'session' => $this -> OXConnector -> getSession(), ), array('folder_id' => $folderid, // set the folder in which the user should be created
-      'start_date' => 0, 'end_date' => 0, ));
+      $createResponse = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array(
+        'action' => 'new',
+        'session' => $this -> OXConnector -> getSession(),
+      ), array(
+        'folder_id' => $folderid, // set the folder in which the user should be created
+        'start_date' => 0,
+        'end_date' => 0,
+      ));
 
       if (!$createResponse) {
         ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::ChangeMessage(failed to create object in folder: ' . $folder -> displayname . ')');
-        throw new StatusException('failed to create new object in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+        throw new StatusException( 'failed to create new object in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED );
         return false;
       }
 
@@ -117,13 +166,19 @@ class OXCalendarSync {
     $diffOX = array_merge($diffOX, $this -> recurrenceAsync2OX($message -> recurrence));
     //append recurrence data
     //ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence) ));
-    $response = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array('action' => 'update', 'session' => $this -> OXConnector -> getSession(), 'folder' => $folderid, 'id' => $id, 'timestamp' => $stat["mod"], ), $diffOX);
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array(
+      'action' => 'update',
+      'session' => $this -> OXConnector -> getSession(),
+      'folder' => $folderid,
+      'id' => $id,
+      'timestamp' => $stat["mod"],
+    ), $diffOX);
 
     if ($response) {
       ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::ChangeMessage(successfully changed - folder: ' . $folder -> displayname . '   id: ' . $id . ')');
       return $this -> StatMessage($folder, $id);
     } else {
-      throw new StatusException('could not change contact: ' . $id . ' in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+      throw new StatusException( 'could not change contact: ' . $id . ' in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED );
       return false;
     }
 
@@ -139,7 +194,8 @@ class OXCalendarSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function DeleteMessage($folder, $id) {
+  public function DeleteMessage( $folder, $id )
+  {
 
     $folderid = $folder -> serverid;
 
@@ -158,7 +214,8 @@ class OXCalendarSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
    */
-  public function MoveMessage($folder, $id, $newfolderid) {
+  public function MoveMessage( $folder, $id, $newfolderid )
+  {
     $folderid = $folder -> serverid;
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::MoveMessage(' . $folderid . ', ' . $id . ', ' . $newfolderid . ')');
   }
@@ -174,14 +231,17 @@ class OXCalendarSync {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function SetReadFlag($folder, $id, $flags) {
+  public function SetReadFlag( $folder, $id, $flags )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::SetReadFlag(' . $folderid . ', ' . $id . ', ' . $flags . ')');
   }
 
-  private function recurrenceOX2Async($data) {
+  private function recurrenceOX2Async( $data )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceOX2Async(' . json_encode($data) . ')');
     $recurrence = new SyncRecurrence;
-    switch ($data["recurrence_type"]) {
+    switch ($data["recurrence_type"])
+    {
       case 0 :
         //no recurrence
         $recurrence = null;
@@ -232,7 +292,8 @@ class OXCalendarSync {
     return $recurrence;
   }
 
-  private function recurrenceAsync2OX($data) {
+  private function recurrenceAsync2OX( $data )
+  {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::recurrenceAsync2OX(' . json_encode($data) . ')');
 
     $recurrence = array();
@@ -248,7 +309,8 @@ class OXCalendarSync {
       return $recurrence;
     }
 
-    switch ($data->type) {
+    switch ($data->type)
+    {
 
       case 0 :
         //daily

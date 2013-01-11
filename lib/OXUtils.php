@@ -1,6 +1,7 @@
 <?php
 
-class OXUtils {
+class OXUtils
+{
 
   /**
    * Returns an array which is the diff of $obj1 and $obj2
@@ -11,7 +12,8 @@ class OXUtils {
    * @access public
    * @return array
    */
-  public function diffSyncObjects($obj1, $obj2) {
+  public function diffSyncObjects( $obj1, $obj2 )
+  {
     // convert objects to arrays
     $obj1 = json_decode(json_encode($obj1), true);
     $obj2 = json_decode(json_encode($obj2), true);
@@ -35,18 +37,19 @@ class OXUtils {
    * @param int $destinationTimezone
    * @return int
    */
-  private function getTimezoneOffset($sourceTimezone, $destinationTimezone) {
+  private function getTimezoneOffset( $sourceTimezone, $destinationTimezone )
+  {
     if ($sourceTimezone === null) {
       $sourceTimezone = date_default_timezone_get();
     }
     if ($destinationTimezone === null) {
       $destinationTimezone = date_default_timezone_get();
     }
-    $sourceTimezone = new DateTimeZone($sourceTimezone);
-    $destinationTimezone = new DateTimeZone($destinationTimezone);
+    $sourceTimezone = new DateTimeZone( $sourceTimezone );
+    $destinationTimezone = new DateTimeZone( $destinationTimezone );
     $now = time();
-    $sourceDate = new DateTime("now", $sourceTimezone);
-    $destinationDate = new DateTime("now", $destinationTimezone);
+    $sourceDate = new DateTime( "now", $sourceTimezone );
+    $destinationDate = new DateTime( "now", $destinationTimezone );
     return $destinationTimezone -> getOffset($destinationDate) - $sourceTimezone -> getOffset($sourceDate);
   }
 
@@ -57,7 +60,8 @@ class OXUtils {
    * @param string $key
    * @param unknown $value
    */
-  private function _setValue($object, $key, $value) {
+  private function _setValue( $object, $key, $value )
+  {
     if (gettype($object) == 'array') {
       $object[$key] = $value;
     } else {
@@ -73,7 +77,8 @@ class OXUtils {
    * @param string $key
    * @return unknown
    */
-  private function _getValue($object, $key) {
+  private function _getValue( $object, $key )
+  {
     if (gettype($object) == 'array') {
       return $object[$key];
     } else {
@@ -88,7 +93,8 @@ class OXUtils {
    * @param array     $mapping
    * @param string    $dateTimeTarget   possible values: false|"ox"|"php"
    */
-  public function mapValues($dataArray, $syncObject, $mapping, $dateTimeTarget = false, $timezoneOffset = 0) {
+  public function mapValues( $dataArray, $syncObject, $mapping, $dateTimeTarget = false, $timezoneOffset = 0 )
+  {
     //ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(offset: ' . $timezoneOffset . ')');
     $sections = array_keys($mapping);
     //ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(DEBUG: ' . json_encode($sections) . ')');
@@ -106,7 +112,8 @@ class OXUtils {
 
           if ($section == 'dates') {
             $datetTime = null;
-            switch ($dateTimeTarget) {
+            switch ($dateTimeTarget)
+            {
               case "ox" :
                 $datetTime = $this -> timestampPHPtoOX($this -> _getValue($dataArray, $datafield), $timezoneOffset);
                 break;
@@ -148,7 +155,8 @@ class OXUtils {
    * Converts a php timestamp to a OX one
    *
    */
-  public function timestampPHPtoOX($phpstamp, $timezoneOffset = 0) {
+  public function timestampPHPtoOX( $phpstamp, $timezoneOffset = 0 )
+  {
     if ($phpstamp == null) {
       return null;
     }
@@ -160,7 +168,8 @@ class OXUtils {
    * Converts a OX timestamp to a php one
    *
    */
-  public function timestampOXtoPHP($oxstamp, $timezoneOffset = 0) {
+  public function timestampOXtoPHP( $oxstamp, $timezoneOffset = 0 )
+  {
     if (strlen($oxstamp) > 3) {
       $oxstamp = substr($oxstamp, 0, -3);
     } else {
@@ -175,7 +184,8 @@ class OXUtils {
    *
    * @param array $mapping
    */
-  public function reversemap($mapping) {
+  public function reversemap( $mapping )
+  {
     $data = array();
     $sections = array_keys($mapping);
     foreach ($sections as &$section) {
@@ -184,12 +194,14 @@ class OXUtils {
     return $data;
   }
 
-  function jsaddslashes($s) {
+  function jsaddslashes( $s )
+  {
     $o = "";
     $l = strlen($s);
     for ($i = 0; $i < $l; $i++) {
       $c = $s[$i];
-      switch($c) {
+      switch($c)
+      {
         case '<' :
           $o .= '\\x3C';
           break;

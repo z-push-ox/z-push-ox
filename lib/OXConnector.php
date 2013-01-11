@@ -3,42 +3,49 @@
 require_once ('lib/utils/timezoneutil.php');
 require_once 'HTTP/Request2.php';
 
-class OXConnector {
+class OXConnector
+{
 
   private $session = false;
   private $cookiejar = true;
 
-  public function OXConnector() {
+  public function OXConnector( )
+  {
   }
 
-  public function setSession($session) {
+  public function setSession( $session )
+  {
     $this -> session = $session;
     ZLog::Write(LOGLEVEL_DEBUG, "OXConnector::setSession($session)");
   }
 
-  public function getSession() {
+  public function getSession( )
+  {
     return $this -> session;
   }
 
-  public function OXreqGET($url, $QueryVariables, $returnResponseObject = false) {
+  public function OXreqGET( $url, $QueryVariables, $returnResponseObject = false )
+  {
     $QueryVariables['timezone'] = 'UTC';
     # all times are UTC
-    $request = new HTTP_Request2(OX_SERVER . $url, HTTP_Request2::METHOD_GET);
+    $request = new HTTP_Request2( OX_SERVER . $url, HTTP_Request2::METHOD_GET );
     $url = $request -> getUrl();
     $url -> setQueryVariables($QueryVariables);
     return $this -> OXreq($request, $returnResponseObject);
   }
 
-  public function OXreqPOST($url, $QueryVariables, $returnResponseObject = false) {
-    $request = new HTTP_Request2(OX_SERVER . $url, HTTP_Request2::METHOD_POST);
+  public function OXreqPOST( $url, $QueryVariables, $returnResponseObject = false )
+  {
+    $request = new HTTP_Request2( OX_SERVER . $url, HTTP_Request2::METHOD_POST );
     $request -> addPostParameter($QueryVariables);
     return $this -> OXreq($request, $returnResponseObject);
   }
 
-  public function OXreqPUT($url, $QueryVariables, $PutData, $returnResponseObject = false) {
+  public function OXreqPUT( $url, $QueryVariables, $PutData, $returnResponseObject = false )
+  {
     $QueryVariables['timezone'] = 'UTC';
     # all times are UTC,
-    $request = new HTTP_Request2(OX_SERVER . $url, HTTP_Request2::METHOD_PUT);
+    $request = new HTTP_Request2( OX_SERVER . $url, HTTP_Request2::METHOD_PUT );
     $request -> setHeader('Content-type: text/javascript; charset=utf-8');
     $url = $request -> getUrl();
     $url -> setQueryVariables($QueryVariables);
@@ -46,9 +53,10 @@ class OXConnector {
     return $this -> OXreq($request, $returnResponseObject);
   }
 
-  public function OXreq($requestOBJ, $returnResponseObject) {
+  public function OXreq( $requestOBJ, $returnResponseObject )
+  {
     $requestOBJ -> setCookieJar($this -> cookiejar);
-    $requestOBJ -> setHeader('User-Agent: z-push-ox (Version '.BackendOX::getBackendVersion().')');
+    $requestOBJ -> setHeader('User-Agent: z-push-ox (Version ' . BackendOX::getBackendVersion() . ')');
     $response = $requestOBJ -> send();
     $this -> cookiejar = $requestOBJ -> getCookieJar();
     if ($returnResponseObject) {
@@ -71,10 +79,11 @@ class OXConnector {
     }
   }
 
-  public function OXreqPUTforSendMail($url, $QueryVariables, $PutData, $returnResponseObject = false) {
+  public function OXreqPUTforSendMail( $url, $QueryVariables, $PutData, $returnResponseObject = false )
+  {
     $QueryVariables['timezone'] = 'UTC';
     # all times are UTC,
-    $request = new HTTP_Request2(OX_SERVER . $url, HTTP_Request2::METHOD_PUT);
+    $request = new HTTP_Request2( OX_SERVER . $url, HTTP_Request2::METHOD_PUT );
     $request -> setHeader('Content-type: text/javascript; charset=utf-8');
     $url = $request -> getUrl();
     $url -> setQueryVariables($QueryVariables);
