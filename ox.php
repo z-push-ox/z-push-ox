@@ -1,10 +1,5 @@
 <?php
 
-/*
- * This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
- * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/3.0/
- */
-
 include_once ('lib/OXConnector.php');
 include_once ('lib/OXUtils.php');
 include_once ('mail/emails.php');
