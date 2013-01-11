@@ -1,10 +1,5 @@
 <?php
 
-/*
- * This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
- * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/3.0/
- */
-
 include_once ('include/mimeDecode.php');
 require_once ('include/z_RFC822.php');
 require_once ('lib/utils/timezoneutil.php');
