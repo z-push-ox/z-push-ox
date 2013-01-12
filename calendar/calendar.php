@@ -48,7 +48,7 @@ class OXCalendarSync
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync initialized.');
   }
 
-  public function GetMessageList( $folderid, $cutoffdate )
+  public function GetMessageList( $folder, $cutoffdate )
   {
 
     $folderid = $folder -> serverid;
@@ -57,14 +57,14 @@ class OXCalendarSync
       'action' => 'all',
       'session' => $this -> OXConnector -> getSession(),
       'folder' => $folderid,
-      'columns' => '1,5,', //objectID�| last modified
+      'columns' => '1,5,', //objectID | last modified
       'start' => '0',
       'end' => '2208988800000',
       'recurrence_master' => 'true',
     ));
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessageList(folderid: ' . $folderid . '  folder: ' . $folder -> displayname . '  data: ' . json_encode($response) . ')');
+    $message = array();
     foreach ($response["data"] as &$event) {
-      $message = array();
       $message["id"] = $event[0];
       $message["mod"] = $event[1];
       $message["flags"] = 1;
@@ -79,17 +79,18 @@ class OXCalendarSync
 
     $folderid = $folder -> serverid;
 
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', ...)');
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', folder: ' . json_encode($folder) . ' ...)');
 
     $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array(
       'action' => 'get',
       'session' => $this -> OXConnector -> getSession(),
       'id' => $id,
       'folder' => $folderid,
+      'timezone' => 'UTC', // causes the ox server to return all dates in utc
       'recurrence_master' => 'true',
     ));
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(appointment data: ' . json_encode($response["data"]) . ')');
-    $event = $this -> mapValues($response["data"], new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php');
+    $event = $this -> OXUtils -> mapValues($response["data"], new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php');
     $event -> timezone = 'UTC';
     $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
@@ -269,19 +270,19 @@ class OXCalendarSync
       case 1 :
         //daily
         $recurrence -> type = 0;
-        $this -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
+        $this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
         break;
 
       case 2 :
         //weekly
         $recurrence -> type = 1;
-        $this -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
+        $this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
         $recurrence -> dayofmonth = $data["day_in_month"];
         break;
 
       case 3 :
         //monthly | monthly on the nth day
-        $this -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
+        $this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
         if ($recurrence -> dayofweek) {
           //monthly on the nth day
           $recurrence -> type = 3;
@@ -295,7 +296,7 @@ class OXCalendarSync
 
       case 4 :
         //yearly
-        $this -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
+        $this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceOXtoASYNC, 'php');
         $recurrence -> monthofyear = intval($data["month"]) + 1;
         if ($recurrence -> dayofweek) {
           //yearly
@@ -334,20 +335,20 @@ class OXCalendarSync
       case 0 :
         //daily
         $recurrence["recurrence_type"] = 1;
-        $recurrence = array_merge($this -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+        $recurrence = array_merge($this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
         unset($recurrence['days']);
         break;
 
       case 1 :
         //weekly
         $recurrence["recurrence_type"] = 2;
-        $recurrence = array_merge($this -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+        $recurrence = array_merge($this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
         break;
 
       case 2 :
         //monthly
         $recurrence["recurrence_type"] = 3;
-        $recurrence = array_merge($this -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+        $recurrence = array_merge($this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
         $recurrence["day_in_month"] = $data -> dayofmonth;
         unset($recurrence['days']);
         break;
@@ -355,14 +356,14 @@ class OXCalendarSync
       case 3 :
         //monthly on the nth day
         $recurrence["recurrence_type"] = 3;
-        $recurrence = array_merge($this -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+        $recurrence = array_merge($this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
         $recurrence["day_in_month"] = $data -> weekofmonth;
         break;
 
       case 5 :
         //yearly
         $recurrence["recurrence_type"] = 4;
-        $recurrence = array_merge($this -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+        $recurrence = array_merge($this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
         $recurrence["month"] = intval($data -> monthofyear) - 1;
         $recurrence["day_in_month"] = $data -> dayofmonth;
         break;
@@ -370,7 +371,7 @@ class OXCalendarSync
       case 6 :
         //yearly on the nth day
         $recurrence["recurrence_type"] = 4;
-        $recurrence = array_merge($this -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
+        $recurrence = array_merge($this -> OXUtils -> mapValues($data, $recurrence, $this -> mappingRecurrenceASYNCtoOX, 'ox'), $recurrence);
         $recurrence["month"] = intval($data -> monthofyear) - 1;
         $recurrence["day_in_month"] = $data -> weekofmonth;
         break;
