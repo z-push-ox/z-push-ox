@@ -354,7 +354,7 @@ class BackendOX extends BackendDiff {
    * @return array                        same return value as StatMessage()
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function ChangeMessage($folderid, $id, $message) {
+  public function ChangeMessage($folderid, $id, $message, $contentParameters ) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::ChangeMessage(' . $folderid . ', ' . $id . ', message: ' . json_encode($message) . ')');
 
     $folder = $this -> GetFolder($folderid);
@@ -373,7 +373,7 @@ class BackendOX extends BackendDiff {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function SetReadFlag($folderid, $id, $flags) {
+  public function SetReadFlag($folderid, $id, $flags, $contentParameters ) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::SetReadFlag(' . $folderid . ', ' . $id . ', ..)');
 
     $folder = $this -> GetFolder($folderid);
@@ -391,7 +391,7 @@ class BackendOX extends BackendDiff {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function DeleteMessage($folderid, $id) {
+  public function DeleteMessage($folderid, $id, $contentParameters ) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::DeleteMessage(' . $folderid . ', ' . $id . ')');
 
     $folder = $this -> GetFolder($folderid);
@@ -412,7 +412,7 @@ class BackendOX extends BackendDiff {
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
    */
-  public function MoveMessage($folderid, $id, $newfolderid) {
+  public function MoveMessage($folderid, $id, $newfolderid, $contentParameters ) {
     ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::MoveMessage(' . $folderid . ', ' . $id . '...)');
 
     $folder = $this -> GetFolder($folderid);

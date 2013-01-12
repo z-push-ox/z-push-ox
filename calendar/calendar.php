@@ -130,7 +130,7 @@ class OXCalendarSync
    * @return array                        same return value as StatMessage()
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function ChangeMessage( $folder, $id, $message )
+  public function ChangeMessage( $folder, $id, $message, $contentParameters )
   {
 
     $folderid = $folder -> serverid;
@@ -194,7 +194,7 @@ class OXCalendarSync
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function DeleteMessage( $folder, $id )
+  public function DeleteMessage( $folder, $id, $contentParameters )
   {
 
     $folderid = $folder -> serverid;
@@ -214,7 +214,7 @@ class OXCalendarSync
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
    */
-  public function MoveMessage( $folder, $id, $newfolderid )
+  public function MoveMessage( $folder, $id, $newfolderid, $contentParameters )
   {
     $folderid = $folder -> serverid;
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::MoveMessage(' . $folderid . ', ' . $id . ', ' . $newfolderid . ')');
@@ -231,7 +231,7 @@ class OXCalendarSync
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function SetReadFlag( $folder, $id, $flags )
+  public function SetReadFlag( $folder, $id, $flags, $contentParameters )
   {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::SetReadFlag(' . $folderid . ', ' . $id . ', ' . $flags . ')');
   }

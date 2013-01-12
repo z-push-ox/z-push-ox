@@ -383,7 +383,7 @@ class OXEmailSync
    * @return array                        same return value as StatMessage()
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function ChangeMessage( $folderid, $id, $message )
+  public function ChangeMessage( $folderid, $id, $message, $contentParameters )
   {
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::ChangeMessage(' . $folderid . ', ' . $id . ', message: ' . json_encode($message) . ')');
     $folder = $this -> GetFolder($folderid);
@@ -401,7 +401,7 @@ class OXEmailSync
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function SetReadFlag( $folder, $id, $flags )
+  public function SetReadFlag( $folder, $id, $flags, $contentParameters )
   {
 
     $folderid = $folder -> serverid;
@@ -435,7 +435,7 @@ class OXEmailSync
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function DeleteMessage( $folder, $id )
+  public function DeleteMessage( $folder, $id, $contentParameters )
   {
 
     $folderid = $folder -> serverid;
@@ -470,7 +470,7 @@ class OXEmailSync
    * @return boolean                      status of the operation
    * @throws StatusException              could throw specific SYNC_MOVEITEMSSTATUS_* exceptions
    */
-  public function MoveMessage( $folder, $id, $newfolderid )
+  public function MoveMessage( $folder, $id, $newfolderid, $contentParameters )
   {
     $folderid = $folder -> serverid;
 
