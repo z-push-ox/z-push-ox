@@ -14,7 +14,7 @@ include_once ('lib/default/diffbackend/diffbackend.php');
 include_once ('include/mimeDecode.php');
 require_once ('include/z_RFC822.php');
 require_once ('lib/utils/timezoneutil.php');
-require_once 'HTTP/Request2.php';
+require_once ('HTTP/Request2.php');
 
 class BackendOX extends BackendDiff {
 
