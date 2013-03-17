@@ -2,6 +2,11 @@
 
 include_once ('lib/OXConnector.php');
 include_once ('lib/OXUtils.php');
+include_once ('lib/TimezoneConverter/fake.php');
+include_once ('lib/TimezoneConverter/DateTime.php');
+include_once ('lib/TimezoneConverter/Exception.php');
+include_once ('lib/TimezoneConverter/TimezoneNotFoundException.php');
+include_once ('lib/TimezoneConverter/TimezoneConverter.php');
 include_once ('mail/emails.php');
 include_once ('contacts/contacts.php');
 include_once ('calendar/calendar.php');
@@ -18,6 +23,7 @@ class BackendOX extends BackendDiff {
   private $root_folder = array();
   private $OXConnector;
   private $OXUtils;
+  private $TZconverter;
 
   public function __construct() {
     $this -> OXConnector = new OXConnector();

@@ -229,6 +229,38 @@ class OXUtils
     }
     return $o;
   }
-
+  
+  /**
+   * Returns a timezone abbreviation (e.g. CET, MST etc.) that matches to the {@param $_offsets}
+   *
+   * If {@see $_expectedTimezone} is set then the method will return this timezone if it matches.
+   *
+   * @param String | array $_offsets
+   * @return String [timezone abbreviation e.g. CET, MST etc.]
+   */
+  function getTimezone($_offsets, $_expectedTimezone = null)
+  {
+    $TZconverter = ActiveSync_TimezoneConverter :: getInstance();
+    return $TZconverter -> getTimezone($_offsets, $_expectedTimezone = null);
+  }
+  
+  
+  function convert_time_zone($date_time, $from_tz, $to_tz)
+  {
+    $date_time = intval($date_time);
+    
+    $time_object1 = new DateTime();
+    $time_object1 -> setTimezone(new DateTimeZone($from_tz));
+    $time_object1 -> setTimestamp($date_time);
+    
+    $time_object2 = new DateTime();
+    $time_object2 -> setTimezone(new DateTimeZone($to_tz));
+    $time_object2 -> setTimestamp($date_time);
+    
+    $offets = $time_object1 -> getOffset() - $time_object2 -> getOffset();
+    ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::convert_time_zone(offset: ' . $offets . '  newTimeStamp: ' . ($date_time + $offets) . ')');
+    return $date_time + $offets;
+  }
+  
 }
 ?>
