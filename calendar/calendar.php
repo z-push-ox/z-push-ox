@@ -91,7 +91,14 @@ class OXCalendarSync
     ));
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(appointment data: ' . json_encode($response["data"]) . ')');
     $event = $this -> OXUtils -> mapValues($response["data"], new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php');
-    $event -> timezone = 'UTC';
+    $event -> oxtimezone = $response["data"]["timezone"];
+    $event -> timezone = $this -> OXUtils -> getASTimezone($event -> oxtimezone);
+    // OX uses UTC DateTimes while AciveSync uses localtime in allday events
+    if ($event -> alldayevent)
+    {
+      $event -> starttime = $this -> OXUtils -> convert_time_zone($event -> starttime, 'UTC', $event -> oxtimezone);
+      $event -> endtime = $this -> OXUtils -> convert_time_zone($event -> endtime, 'UTC', $event -> oxtimezone);
+    }
     $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
     return $event;
@@ -156,17 +163,26 @@ class OXCalendarSync
       }
 
       $id = $createResponse["data"]["id"];
-
     }
-
+    
     $oldmessage = $this -> GetMessage($folder, $id, null);
+    $message -> oxtimezone = $this -> OXUtils -> getTimezone($message->timezone, $oldmessage -> oxtimezone);
+    
+    // OX uses UTC DateTimes while AciveSync uses localtime in allday events
+    if ($message -> alldayevent)
+    {
+      $message -> starttime = $this -> OXUtils -> convert_time_zone($message -> starttime, $message -> oxtimezone, 'UTC');
+      $message -> endtime = $this -> OXUtils -> convert_time_zone($message -> endtime, $message -> oxtimezone, 'UTC');
+    }
+    
     $diff = $this -> OXUtils -> diffSyncObjects($message, $oldmessage);
     $stat = $this -> StatMessage($folder, $id);
 
     $diffOX = $this -> OXUtils -> mapValues($diff, array(), $this -> mappingCalendarASYNCtoOX, 'ox');
-    $diffOX = array_merge($diffOX, $this -> recurrenceAsync2OX($message -> recurrence));
+    $diffOX["timezone"] = $message -> oxtimezone;
     //append recurrence data
-    //ZLog::Write(LOGLEVEL_DEBUG, "recurrencedata: " . json_encode( $this->recurrenceAsync2OX($message->recurrence) ));
+    $diffOX = array_merge($diffOX, $this -> recurrenceAsync2OX($message -> recurrence));
+    ZLog::Write(LOGLEVEL_DEBUG, "DiffData: " . json_encode( $diffOX ));
     $response = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array(
       'action' => 'update',
       'session' => $this -> OXConnector -> getSession(),

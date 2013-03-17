@@ -244,6 +244,11 @@ class OXUtils
     return $TZconverter -> getTimezone($_offsets, $_expectedTimezone = null);
   }
   
+  function getASTimezone($_timezone, $_startDate = null)
+  {
+    $TZconverter = ActiveSync_TimezoneConverter :: getInstance();
+    return $TZconverter -> encodeTimezone($_timezone, $_startDate = null);
+  }
   
   function convert_time_zone($date_time, $from_tz, $to_tz)
   {
