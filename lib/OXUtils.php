@@ -93,38 +93,34 @@ class OXUtils
    * @param array     $mapping
    * @param string    $dateTimeTarget   possible values: false|"ox"|"php"
    */
-  public function mapValues( $dataArray, $syncObject, $mapping, $dateTimeTarget = false, $timezoneOffset = 0 )
+  public function mapValues( $dataArray, $syncObject, $mapping, $dateTimeTarget = false, $opt = array())
   {
-    //ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(offset: ' . $timezoneOffset . ')');
+    if (array_key_exists('allday', $opt)){
+      $allday = $opt['allday'];
+    }
+    else{
+      $allday = false;
+    }
+    if (array_key_exists('expectedTimezone', $opt)){
+      $expectedTimezone = $opt['expectedTimezone'];
+    }
+    else{
+      $expectedTimezone = null;
+    }
+    $timezone = null;
+    
     $sections = array_keys($mapping);
     //ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(DEBUG: ' . json_encode($sections) . ')');
 
     foreach ($sections as &$section) {
       $datafields = array_keys($mapping[$section]);
-      //ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(DEBUG2: ' . json_encode($datafields) . ')');
+      ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(Section: ' . $section . ')');
       foreach ($datafields as &$datafield) {
         if (array_key_exists($datafield, $dataArray)) {
           $asyncKey = $mapping[$section][$datafield];
 
           if ($section == 'strings') {
             $syncObject = $this -> _setValue($syncObject, $asyncKey, $this -> _getValue($dataArray, $datafield));
-          }
-
-          if ($section == 'dates') {
-            $datetTime = null;
-            switch ($dateTimeTarget)
-            {
-              case "ox" :
-                $datetTime = $this -> timestampPHPtoOX($this -> _getValue($dataArray, $datafield), $timezoneOffset);
-                break;
-              case "php" :
-                $datetTime = $this -> timestampOXtoPHP($this -> _getValue($dataArray, $datafield), $timezoneOffset);
-                break;
-              default :
-                $datetTime = $this -> _getValue($dataArray, $datafield);
-                break;
-            }
-            $syncObject = $this -> _setValue($syncObject, $asyncKey, $datetTime);
           }
 
           if ($section == 'booleans') {
@@ -143,10 +139,79 @@ class OXUtils
               }
             }
             $syncObject = $this -> _setValue($syncObject, $asyncKey, $this -> _getValue($dataArray, $datafield));
-
           }
+          
+          if ($section == 'timezone'){
+            ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(TIMEZONE START: ' . $this -> _getValue($dataArray, $datafield) . '   DateTimeTarget: ' . $dateTimeTarget . ')');
+            switch ($dateTimeTarget)
+            {
+              case "ox" :
+                $timezone = $this -> getTimezone($this -> _getValue($dataArray, $datafield));
+                ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(TIMEZONE walking OX   TZ: ' . $timezone);
+                break;
+              case "php" :
+                $timezone = $this -> getASTimezone($this -> _getValue($dataArray, $datafield));
+                ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(TIMEZONE walking PHP   TZ: ' . $timezone);
+                break;
+            }
+            ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(TIMEZONE END: ' . $timezone . ')');
+            $syncObject = $this -> _setValue($syncObject, $asyncKey, $timezone);
+          }
+          
         }
       }
+    }
+    
+    if ($timezone){
+      if ($dateTimeTarget == 'php'){
+        $timezone = $this -> getTimezone($timezone);
+      }
+    }
+    
+    foreach ($sections as &$section) {
+      $datafields = array_keys($mapping[$section]);
+      ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(Section: ' . $section . ')');
+      // need to know the timezone if it is an allday event
+      foreach ($datafields as &$datafield) {
+        if (array_key_exists($datafield, $dataArray)) {
+          $asyncKey = $mapping[$section][$datafield];
+          
+          if ($section == 'dates') {
+            $datetTime = null;
+            switch ($dateTimeTarget)
+            {
+              // OX uses UTC DateTimes while AciveSync uses localtime in allday events
+              case "ox" :
+                if ($allday){
+                  ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(TIMEZONE used: ' . $timezone . ' DateTimeTarget: ' . $dateTimeTarget . ')');
+                  $datetTime = $this -> _getValue($dataArray, $datafield);
+                  $datetTime = $this -> convert_time_zone($datetTime, $timezone, 'UTC');
+                  $datetTime = $this -> timestampPHPtoOX($datetTime);
+                }
+                else{
+                  $datetTime = $this -> timestampPHPtoOX($this -> _getValue($dataArray, $datafield));
+                }
+                break;
+              case "php" :
+                if ($allday){
+                  ZLog::Write(LOGLEVEL_DEBUG, 'BackendOX::mapValues(TIMEZONE used: ' . $timezone . ' DateTimeTarget: ' . $dateTimeTarget . ')');
+                  $datetTime = $this -> timestampOXtoPHP($this -> _getValue($dataArray, $datafield));
+                  //$datetTime = $this -> convert_time_zone($datetTime, 'UTC', $timezone);
+                }
+                else{
+                  $datetTime = $this -> timestampOXtoPHP($this -> _getValue($dataArray, $datafield));
+                }
+                break;
+              default :
+                $datetTime = $this -> _getValue($dataArray, $datafield);
+                break;
+            }
+            $syncObject = $this -> _setValue($syncObject, $asyncKey, $datetTime);
+          }
+          
+        }
+      }
+      
     }
     return $syncObject;
   }
@@ -155,12 +220,11 @@ class OXUtils
    * Converts a php timestamp to a OX one
    *
    */
-  public function timestampPHPtoOX( $phpstamp, $timezoneOffset = 0 )
+  public function timestampPHPtoOX( $phpstamp )
   {
     if ($phpstamp == null) {
       return null;
     }
-    $phpstamp = intval($phpstamp) + $timezoneOffset;
     return $phpstamp . "000";
   }
 
@@ -168,14 +232,13 @@ class OXUtils
    * Converts a OX timestamp to a php one
    *
    */
-  public function timestampOXtoPHP( $oxstamp, $timezoneOffset = 0 )
+  public function timestampOXtoPHP( $oxstamp )
   {
     if (strlen($oxstamp) > 3) {
       $oxstamp = substr($oxstamp, 0, -3);
     } else {
-      return $timezoneOffset;
+      return 0;
     }
-    $oxstamp = intval($oxstamp) + $timezoneOffset;
     return $oxstamp;
   }
 
@@ -252,6 +315,12 @@ class OXUtils
   
   function convert_time_zone($date_time, $from_tz, $to_tz)
   {
+    if (!$from_tz){
+      $from_tz = 'UTC';
+    }
+    if (!$to_tz){
+      $to_tz = 'UTC';
+    }
     $date_time = intval($date_time);
     
     $time_object1 = new DateTime();

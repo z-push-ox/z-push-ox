@@ -90,15 +90,10 @@ class OXCalendarSync
       'recurrence_master' => 'true',
     ));
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(appointment data: ' . json_encode($response["data"]) . ')');
-    $event = $this -> OXUtils -> mapValues($response["data"], new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php');
+    $event = $this -> OXUtils -> mapValues($response["data"], new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php', array(
+        'allday' => $response["data"]["full_time"],
+    ));
     $event -> oxtimezone = $response["data"]["timezone"];
-    $event -> timezone = $this -> OXUtils -> getASTimezone($event -> oxtimezone);
-    // OX uses UTC DateTimes while AciveSync uses localtime in allday events
-    if ($event -> alldayevent)
-    {
-      $event -> starttime = $this -> OXUtils -> convert_time_zone($event -> starttime, 'UTC', $event -> oxtimezone);
-      $event -> endtime = $this -> OXUtils -> convert_time_zone($event -> endtime, 'UTC', $event -> oxtimezone);
-    }
     $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
     return $event;
@@ -155,31 +150,28 @@ class OXCalendarSync
         'start_date' => 0,
         'end_date' => 0,
       ));
-
+      
       if (!$createResponse) {
         ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::ChangeMessage(failed to create object in folder: ' . $folder -> displayname . ')');
         throw new StatusException( 'failed to create new object in folder: ' . $folder -> displayname, SYNC_STATUS_SYNCCANNOTBECOMPLETED );
         return false;
       }
-
+      
       $id = $createResponse["data"]["id"];
     }
     
     $oldmessage = $this -> GetMessage($folder, $id, null);
     $message -> oxtimezone = $this -> OXUtils -> getTimezone($message->timezone, $oldmessage -> oxtimezone);
     
-    // OX uses UTC DateTimes while AciveSync uses localtime in allday events
-    if ($message -> alldayevent)
-    {
-      $message -> starttime = $this -> OXUtils -> convert_time_zone($message -> starttime, $message -> oxtimezone, 'UTC');
-      $message -> endtime = $this -> OXUtils -> convert_time_zone($message -> endtime, $message -> oxtimezone, 'UTC');
-    }
-    
     $diff = $this -> OXUtils -> diffSyncObjects($message, $oldmessage);
+    $diff['timezone'] = $message -> timezone;
     $stat = $this -> StatMessage($folder, $id);
-
-    $diffOX = $this -> OXUtils -> mapValues($diff, array(), $this -> mappingCalendarASYNCtoOX, 'ox');
-    $diffOX["timezone"] = $message -> oxtimezone;
+    
+    $diffOX = $this -> OXUtils -> mapValues($diff, array(), $this -> mappingCalendarASYNCtoOX, 'ox', array(
+        'allday' => $message -> alldayevent,
+        'expectedTimezone' => $oldmessage -> oxtimezone,
+    ));
+    
     //append recurrence data
     $diffOX = array_merge($diffOX, $this -> recurrenceAsync2OX($message -> recurrence));
     ZLog::Write(LOGLEVEL_DEBUG, "DiffData: " . json_encode( $diffOX ));
