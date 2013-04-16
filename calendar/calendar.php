@@ -206,10 +206,21 @@ class OXCalendarSync
    */
   public function DeleteMessage( $folder, $id, $contentParameters )
   {
-
-    $folderid = $folder -> serverid;
-
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::DeleteMessage(' . $folderid . ', ' . $id . ')');
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::DeleteMessage(' . $folder -> serverid . ', ' . $id . ')');
+    
+    $stat = $this -> StatMessage($folder, $id);
+    $response = $this -> OXConnector -> OXreqPUT('/ajax/calendar', array(
+        'action' => 'delete',
+        'session' => $this -> OXConnector -> getSession(),
+        'timestamp' => $stat["mod"],
+    ), array(
+        'folder' => $folder -> serverid,
+        'id' => $id,
+    ));
+    if ($response) {
+      return true;
+    }
+    return false;
   }
 
   /**
