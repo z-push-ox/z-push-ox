@@ -95,6 +95,7 @@ class OXCalendarSync
     ));
     $event -> oxtimezone = $response["data"]["timezone"];
     $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
+    $event->meetingstatus = "1"; // see issue #4
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
     return $event;
   }
