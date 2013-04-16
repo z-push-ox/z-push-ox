@@ -339,13 +339,7 @@ class OXCalendarSync
     $recurrence = array();
 
     if (!$data) {
-      //if $data is null there is no recurrence
       $recurrence['recurrence_type'] = "0";
-      //$recurrence["day_in_month"] = null;
-      //$recurrence['interval'] = null;
-      //$recurrence['until'] = null;
-      //$recurrence['days'] = null;
-      //$recurrence['occurrences'] = null;
       return $recurrence;
     }
 

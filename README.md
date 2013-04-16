@@ -29,9 +29,11 @@ Feature List
 ============
 
 ### Legend:
-- X = working
-- \- = not working
-- O = not tested / not testable
+  - X ~ working
+  - \- ~ not working
+  - O ~ not tested / not testable
+  - OX ~ edited in OX and synced to device
+  - AS ~ edited on device and synced to OX
 
 ### EMail:
 
@@ -88,8 +90,8 @@ Feature List
 <table>
   <tr>
     <th></th>
-    <th>OX => AS</th>
-    <th>AS => OX</th>
+    <th>OX</th>
+    <th>AS</th>
   </tr>
   <tr>
     <td>no recurrence</td>
