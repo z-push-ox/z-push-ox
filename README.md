@@ -4,6 +4,10 @@ z-push-ox
 Open-Xchange Z-Push backend. Currently this is a work in progress.
 
 
+Requirements
+=======
+   - Open-Xchange >= 7.2.1 (issue #5)
+
 Install
 =======
 
