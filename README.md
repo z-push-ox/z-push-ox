@@ -133,7 +133,65 @@ Feature List
   </tr>
 </table>
 
+
 ### Contacts:
+You can add, delete and modify contacts. Contact folders are supported (given your device supports them as well).
+Moving a contact from one group to another is not supported.
+
+###### Synced fields:
+  * fileas
+  * lastname
+  * firstname
+  * middlename
+  * nickname
+  * birthday (see issue #6)
+  * title
+  * department
+  * suffix
+  * anniversary
+  * assistantname
+  * assistnamephonenumber
+  * spouse
+  * body
+  * imaddress
+  * imaddress2
+  * homecity
+  * homecountry
+  * homepostalcode
+  * homestate
+  * homestreet
+  * businesscity
+  * businesscountry
+  * businesspostalcode
+  * businessstate
+  * businessstreet
+  * othercity
+  * othercountry
+  * otherpostalcode
+  * otherstate
+  * otherstreet
+  * managername
+  * email1address
+  * email2address
+  * email3address
+  * companyname
+  * jobtitle
+  * webpage
+  * homephonenumber
+  * home2phonenumber
+  * mobilephonenumber
+  * telephone_pager
+  * carphonenumber
+  * homefaxnumber
+  * radiophonenumber
+  * businessphonenumber
+  * business2phonenumber
+  * businessfaxnumber
+  * categories
+  * yomifirstname
+  * yomilastname
+  * yomicompanyname
+
 
 License
 =======
