@@ -92,7 +92,8 @@ class OXEmailSync
       'sort' => '610',
       'order' => 'desc',
       'folder' => $folderid,
-      'columns' => '600,611,610', //objectID�|flags|date
+      'columns' => '600,611,610', //objectID|flags|date
+      'timezone' => 'UTC', // causes the ox server to return all dates in utc
     ));
 
     // ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessageList(' . $folderid . '): ' . 'Response: ' . print_r($response, true));
@@ -109,7 +110,7 @@ class OXEmailSync
       $message = array();
       $message["id"] = $mail[0];
       $message["flags"] = $mail[1];
-      # $message["mod"] = $this->timestampOXtoPHP($mail[2]);
+      # $message["mod"] = $this -> OXUtils -> timestampOXtoPHP($mail[2]);
       $message["mod"] = 0;
       $messages[] = $message;
 
@@ -198,6 +199,7 @@ class OXEmailSync
       'folder' => $folderid,
       'id' => $id,
       'unseen' => 'true',
+      'timezone' => 'UTC', // causes the ox server to return all dates in utc
     ));
 
     foreach ($response["data"]["to"] as &$to) {
@@ -237,7 +239,7 @@ class OXEmailSync
 
     $output -> subject = $response["data"]["subject"];
     $output -> read = array_key_exists("unseen", $response["data"]) && $response["data"]["unseen"] == "true" ? false : true;
-    $output -> datereceived = $this -> timestampOXtoPHP($response["data"]["received_date"]);
+    $output -> datereceived = $this -> OXUtils -> timestampOXtoPHP($response["data"]["received_date"]);
 
     foreach ($response["data"]["attachments"] as $attachment) {
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): Attachment "' . $attachment['id'] . '" has Contenttype "' . $attachment['content_type'] . '"');
@@ -264,7 +266,8 @@ class OXEmailSync
         'folder' => $folderid,
         'id' => $id,
         'unseen' => 'true',
-        'src' => 'true'
+        'src' => 'true',
+        'timezone' => 'UTC', // causes the ox server to return all dates in utc
       ));
       ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::GetMessage(' . $folderid . ', ' . $id . '): MIME-Response: "' . print_r($MIMEresponse, true));
 
@@ -353,6 +356,7 @@ class OXEmailSync
       'id' => $id,
       'columns' => '600,611', // id, flags
       'unseen' => 'true',
+      'timezone' => 'UTC', // causes the ox server to return all dates in utc
     ));
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXEmailSync::StatMessage(' . $folderid . ', ' . $id . '): ' . 'StatResponse ' . print_r($response, true));
@@ -667,34 +671,6 @@ class OXEmailSync
     } else {
       return $object -> $key;
     }
-  }
-
-  /**
-   * Converts a php timestamp to a OX one
-   *
-   */
-  private function timestampPHPtoOX( $phpstamp, $timezoneOffset = 0 )
-  {
-    if ($phpstamp == null) {
-      return null;
-    }
-    $phpstamp = intval($phpstamp) + $timezoneOffset;
-    return $phpstamp . "000";
-  }
-
-  /**
-   * Converts a OX timestamp to a php one
-   *
-   */
-  private function timestampOXtoPHP( $oxstamp, $timezoneOffset = 0 )
-  {
-    if (strlen($oxstamp) > 3) {
-      $oxstamp = substr($oxstamp, 0, -3);
-    } else {
-      return $timezoneOffset;
-    }
-    $oxstamp = intval($oxstamp) + $timezoneOffset;
-    return $oxstamp;
   }
 
 }
