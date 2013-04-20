@@ -148,7 +148,7 @@ Moving a contact from one group to another is not supported.
   * firstname
   * middlename
   * nickname
-  * birthday (see issue #6)
+  * birthday
   * title
   * department
   * suffix
