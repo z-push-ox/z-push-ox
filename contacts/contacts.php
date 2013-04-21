@@ -90,7 +90,7 @@ class OXContactSync
       'action' => 'all',
       'session' => $this -> OXConnector -> getSession(),
       'folder' => $folderid,
-      'columns' => '1,5,', //objectID�| last modified
+      'columns' => '1,5,', //objectID| last modified
     ));
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::GetMessageList(folderid: ' . $folderid . '  folder: ' . $folder -> displayname . '  data: ' . json_encode($response) . ')');
@@ -120,10 +120,13 @@ class OXContactSync
       'session' => $this -> OXConnector -> getSession(),
       'id' => $id,
       'folder' => $folderid,
+      'timezone' => 'UTC', // causes the ox server to return all dates in utc
     ));
 
-    return $this -> OXUtils -> mapValues($response["data"], new SyncContact( ), $this -> mappingContactsOXtoASYNC, 'php');
-
+    $contact = $this -> OXUtils -> mapValues($response["data"], new SyncContact( ), $this -> mappingContactsOXtoASYNC, 'php');
+    $contact -> birthday -= 39600; // remove 11 hours for adressing #6
+    return $contact;
+    
   }
 
   public function StatMessage( $folder, $id )
@@ -160,12 +163,10 @@ class OXContactSync
    * @return array                        same return value as StatMessage()
    * @throws StatusException              could throw specific SYNC_STATUS_* exceptions
    */
-  public function ChangeMessage( $folder, $id, $message, $contentParameters )
+  public function ChangeMessage( $folder, $id, $message )
   {
 
     $folderid = $folder -> serverid;
-
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(' . $folderid . ', ' . $id . ', ...)');
 
     if (!$id) {
       //id is not set => create object
@@ -186,17 +187,20 @@ class OXContactSync
     }
 
     //id is set => change object
+    $message -> birthday += 39600; // add 11 hours for adressing #6
     $oldmessage = $this -> GetMessage($folder, $id, null);
     $diff = $this -> OXUtils -> diffSyncObjects($message, $oldmessage);
     $stat = $this -> StatMessage($folder, $id);
 
     $diffOX = $this -> OXUtils -> mapValues($diff, array(), $this -> mappingContactsASYNCtoOX, 'ox');
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXContactSync::ChangeMessage(diffOX: ' . json_encode($diffOX) . ')');
     $response = $this -> OXConnector -> OXreqPUT('/ajax/contacts', array(
       'action' => 'update',
       'session' => $this -> OXConnector -> getSession(),
       'folder' => $folderid,
       'id' => $id,
       'timestamp' => $stat["mod"],
+      'timezone' => 'UTC', // causes the ox server to return all dates in utc
     ), $diffOX);
 
     if ($response) {
