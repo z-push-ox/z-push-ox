@@ -181,6 +181,20 @@ class OXCalendarSync
         'expectedTimezone' => $oldmessage -> oxtimezone,
     ));
     
+    foreach ($diff["exceptions"] as &$exception){
+      $exceptionstarttime = $exception["exceptionstarttime"];
+      if ($message -> alldayevent){
+        $exceptionstarttime = $this -> OXUtils -> convert_time_zone($exceptionstarttime, $message -> oxtimezone, "UTC");
+      }
+      $exceptionstarttime = $this -> OXUtils -> timestampPHPtoOX($exceptionstarttime);
+      if ($exception["deleted"]){
+        if (!array_key_exists("delete_exceptions", $diffOX)){ // create delete_exceptions array
+          $diffOX["delete_exceptions"] = array();
+        }
+        $diffOX["delete_exceptions"][] = $exceptionstarttime;
+      }
+    }
+    
     //append recurrence data
     $diffOX = array_merge($diffOX, $this -> recurrenceAsync2OX($message -> recurrence));
     ZLog::Write(LOGLEVEL_DEBUG, "DiffData: " . json_encode( $diffOX ));
