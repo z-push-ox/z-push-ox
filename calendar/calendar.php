@@ -94,6 +94,14 @@ class OXCalendarSync
         'allday' => $response["data"]["full_time"],
     ));
     $event -> oxtimezone = $response["data"]["timezone"];
+    if (array_key_exists("delete_exceptions", $response["data"])){ //check if delete exceptions exist
+      foreach ($response["data"]["delete_exceptions"] as &$delete_exception){
+        $appointmentexception = new SyncAppointmentException();
+        $appointmentexception -> deleted = 1;
+        $appointmentexception -> exceptionstarttime = $this -> OXUtils -> timestampOXtoPHP($delete_exception);
+        $event -> exceptions[] = $appointmentexception;
+      }
+    }
     $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
     $event->meetingstatus = "1"; // see issue #4
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
