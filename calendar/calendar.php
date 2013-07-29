@@ -99,6 +99,9 @@ class OXCalendarSync
         $appointmentexception = new SyncAppointmentException();
         $appointmentexception -> deleted = 1;
         $appointmentexception -> exceptionstarttime = $this -> OXUtils -> timestampOXtoPHP($delete_exception);
+        if ($event -> alldayevent){
+          $appointmentexception -> exceptionstarttime = $this -> OXUtils -> convert_time_zone($appointmentexception -> exceptionstarttime, "UTC",$ $event -> oxtimezone);
+        }
         $event -> exceptions[] = $appointmentexception;
       }
     }
