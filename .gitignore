@@ -2,3 +2,4 @@
 /package.xml
 .DS_Store
 ._.DS_Store
+.fuse_hidden*
