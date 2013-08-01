@@ -74,6 +74,18 @@ class OXCalendarSync
     return $messages;
   }
 
+  private function _GetEvent( $folderid, $id ){
+      $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array(
+              'action' => 'get',
+              'session' => $this -> OXConnector -> getSession(),
+              'id' => $id,
+              'folder' => $folderid,
+              'timezone' => 'UTC', // causes the ox server to return all dates in utc
+              'recurrence_master' => 'true',
+      ));
+      return $response;
+  }
+  
   public function GetMessage( $folder, $id, $contentparameters )
   {
 
@@ -81,18 +93,49 @@ class OXCalendarSync
 
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', folder: ' . json_encode($folder) . ' ...)');
 
+    $response = $this -> _GetEvent( $folderid, $id);
+    $data = $response["data"];
+    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(appointment data: ' . json_encode($data) . ')');
+    
+    $event = $this -> ox2appointment($data);
+    
+    // handle recurrence information
+    $event -> recurrence = $this -> recurrenceOX2Async($data);
+    
+    // check exceptions of recurrence information
     $response = $this -> OXConnector -> OXreqGET('/ajax/calendar', array(
-      'action' => 'get',
+      'action' => 'all',
       'session' => $this -> OXConnector -> getSession(),
-      'id' => $id,
       'folder' => $folderid,
-      'timezone' => 'UTC', // causes the ox server to return all dates in utc
+      'columns' => '1,206', // id, recurrence_id
+      'start' => '0',
+      'end' => '2208988800000',
       'recurrence_master' => 'true',
     ));
-    ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(appointment data: ' . json_encode($response["data"]) . ')');
+    foreach ($response["data"] as &$_event){
+        $event_id = $_event[0];
+        $event_recurrence_id = $_event[1];
+        if ($event_recurrence_id == $id and $event_recurrence_id != $event_id){
+            //found an event that is an exception for event $id
+            $eresponse = $this -> _GetEvent( $folderid, $event_id);
+            $eevent = $this -> ox2appointment($eresponse["data"], True);
+            $eevent -> exceptionstarttime = $this -> OXUtils -> timestampOXtoPHP( $eresponse["data"]["change_exceptions"][0] );
+            $event -> exceptions[] = $eevent;
+        }
+    }
     
-    $event = $this -> ox2appointment($response["data"]);
-    $event -> recurrence = $this -> recurrenceOX2Async($response["data"]);
+    // check for delete exceptions (deleted events in a recurrence)
+    if (array_key_exists("delete_exceptions", $data)){ //check if delete exceptions exist
+        foreach ($data["delete_exceptions"] as &$delete_exception){
+            $appointmentexception = new SyncAppointmentException();
+            $appointmentexception -> deleted = 1;
+            $appointmentexception -> exceptionstarttime = $this -> OXUtils -> timestampOXtoPHP($delete_exception);
+            if ($event -> alldayevent){
+                $appointmentexception -> exceptionstarttime = $this -> OXUtils -> convert_time_zone($appointmentexception -> exceptionstarttime, "UTC",$ $event -> oxtimezone);
+            }
+            $event -> exceptions[] = $appointmentexception;
+        }
+    }
     
     ZLog::Write(LOGLEVEL_DEBUG, 'OXCalendarSync::GetMessage(' . $folderid . ', ' . $id . ', event: ' . json_encode($event) . ')');
     return $event;
@@ -270,26 +313,21 @@ class OXCalendarSync
    * 
    * @param array $data
    */
-  private function ox2appointment( $data ){
-      $event = $this -> OXUtils -> mapValues($data, new SyncAppointment( ), $this -> mappingCalendarOXtoASYNC, 'php', array(
+  private function ox2appointment( $data , $exception = False){
+      if (!$exception){
+          $appointment = new SyncAppointment();
+      }
+      else {
+          $appointment = new SyncAppointmentException();
+      }
+      $appointment = $this -> OXUtils -> mapValues($data, $appointment, $this -> mappingCalendarOXtoASYNC, 'php', array(
               'allday' => $data["full_time"],
       ));
       
-      $event -> oxtimezone = $data["timezone"];
-      if (array_key_exists("delete_exceptions", $data)){ //check if delete exceptions exist
-          foreach ($data["delete_exceptions"] as &$delete_exception){
-              $appointmentexception = new SyncAppointmentException();
-              $appointmentexception -> deleted = 1;
-              $appointmentexception -> exceptionstarttime = $this -> OXUtils -> timestampOXtoPHP($delete_exception);
-              if ($event -> alldayevent){
-                  $appointmentexception -> exceptionstarttime = $this -> OXUtils -> convert_time_zone($appointmentexception -> exceptionstarttime, "UTC",$ $event -> oxtimezone);
-              }
-              $event -> exceptions[] = $appointmentexception;
-          }
-      }
-      $event->meetingstatus = "1"; // see issue #4
+      $appointment -> oxtimezone = $data["timezone"];
+      $appointment->meetingstatus = "1"; // see issue #4
       
-      return $event;
+      return $appointment;
   }
   
   /**
