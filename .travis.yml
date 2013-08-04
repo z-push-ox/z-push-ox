@@ -4,14 +4,17 @@ php:
 branches: 
   only: 
   - master
+env: 
+  matrix: 
+    secure: GmjkXymq1DPSxl3dWFHYk1ObX/a+upn6pgvi9ocJw7rg9VQqEwnjDw2COvAPXZ3qAbfAk395TLSZ3OqhjnzHVUoG1wXZy8s8Q2rqNHRws3E2zmF3Wnpmtw8G7S2KIu+zRmMSSL4NssOdlF3XWLgDBM/AIYKc2pK1VrcPMwBNxZA=
+notifications:
+  email:
+    on_success: change
+    on_failure: always
 
 before_install: 
   - sudo apt-get update -qq
   - sudo apt-get install -qq dpkg-dev alien
-
-env: 
-  matrix: 
-    secure: GmjkXymq1DPSxl3dWFHYk1ObX/a+upn6pgvi9ocJw7rg9VQqEwnjDw2COvAPXZ3qAbfAk395TLSZ3OqhjnzHVUoG1wXZy8s8Q2rqNHRws3E2zmF3Wnpmtw8G7S2KIu+zRmMSSL4NssOdlF3XWLgDBM/AIYKc2pK1VrcPMwBNxZA=
 
 script: 
   - make deb
