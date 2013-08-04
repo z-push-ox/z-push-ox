@@ -1,0 +1,23 @@
+Source: d-push
+Section: web
+Priority: extra
+Maintainer: z-push-ox <no@valid.mail>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.9.3
+Homepage: https://github.com/z-push-ox/z-push-ox
+Vcs-Git: https://github.com/z-push-ox/z-push-ox.git
+Vcs-Browser: https://github.com/z-push-ox/z-push-ox
+
+Package: d-push-ox
+Architecture: all
+Depends: ${misc:Depends}, d-push
+Recommends: 
+Description: Open-Xchange Z-Push-2 Backend
+ D-push is debian's rebranded version of zarafa's z-push.
+ It is an implementation of the ActiveSync protocol which is used
+ 'over-the-air' for multi platform ActiveSync devices, including Windows
+ Mobile, iPhone, Sony Ericsson and Nokia mobile devices. With D-push any
+ groupware can be connected and synced with these devices.
+ .
+ The backend contained in this package allows you to sync mobile devices
+ against an Open-Xchange server.
