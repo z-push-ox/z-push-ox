@@ -6,7 +6,7 @@ branches:
   - master
 env: 
   matrix: 
-    secure: GmjkXymq1DPSxl3dWFHYk1ObX/a+upn6pgvi9ocJw7rg9VQqEwnjDw2COvAPXZ3qAbfAk395TLSZ3OqhjnzHVUoG1wXZy8s8Q2rqNHRws3E2zmF3Wnpmtw8G7S2KIu+zRmMSSL4NssOdlF3XWLgDBM/AIYKc2pK1VrcPMwBNxZA=
+    secure: fLNqTccNgNse23J+Qso1K6ztycAAgIl6+kiPfexznlAu4IwcM2Pp2pYaDeelOJXSNmHoLo96Du/T+84Kh/G770yaDY8nwrrq2PMMWbfVXABzwtgrSWOLRdt9OKr17OgDaTIRAIXa3Va2Z/l3tZ/io2E9jFyUT1Z3F0gC8tM8H7o=
 notifications:
   email:
     on_success: change
