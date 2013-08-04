@@ -1,0 +1,26 @@
+language: php
+php: 
+  - "5.5"
+branches: 
+  only: 
+  - master
+
+before_install: 
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq dpkg-dev alien
+
+env: 
+  matrix: 
+    secure: GmjkXymq1DPSxl3dWFHYk1ObX/a+upn6pgvi9ocJw7rg9VQqEwnjDw2COvAPXZ3qAbfAk395TLSZ3OqhjnzHVUoG1wXZy8s8Q2rqNHRws3E2zmF3Wnpmtw8G7S2KIu+zRmMSSL4NssOdlF3XWLgDBM/AIYKc2pK1VrcPMwBNxZA=
+
+script: 
+  - make deb
+  - make rpm
+  - openssl enc -d -aes-256-cbc -salt -in debian/id_rsa.enc -out id_rsa -pass $IDPASS
+  - chmod 600 id_rsa
+  - DEBFILE=$(basename ../d-push*.deb)
+  - DEBTARGET="${DEBFILE%.*}"-$TRAVIS_BUILD_NUMBER.deb
+  - RPMFILE=$(basename ../z-push*.rpm)
+  - RPMTARGET="${RPMFILE%.*}"-$TRAVIS_BUILD_NUMBER.rpm
+  - scp -o StrictHostKeyChecking=no -i id_rsa ../$DEBFILE liob@frs.sourceforge.net:/home/frs/project/z-push-ox/debian/nightly/$DEBTARGET
+  - scp -o StrictHostKeyChecking=no -i id_rsa ../$RPMFILE liob@frs.sourceforge.net:/home/frs/project/z-push-ox/rpm/nightly/$RPMTARGET
