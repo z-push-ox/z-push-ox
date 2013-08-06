@@ -1,204 +1,92 @@
-z-push-ox
+Z-Push-OX
 =========
 
-Open-Xchange Z-Push backend. Currently this is a work in progress.
+Z-Push-OX is a Z-Push-2 backend for Open-Xchange. As it is a work in progress
+please see the [feature matrix] for the currently implemented features and take a
+look at the [bugtracker].
 
+Infrastructure
+--------------
+
+![](http://z-push.sourceforge.net/soswp/uploads/1232370881.png)
+
+Z-Push-2 is an implementation of Microsoft's ActiveSync protocol which is used
+'over-the-air' for multi platform active sync devices, including Windows Mobile
+and active sync used on Apple's iPhone, Sony Ericsson and Nokia phones. Open
+source Z-Push enables any PHP-based groupware package to become fully syncable
+with any ActiveSync-compliant device.
+
+Z-Push-OX is implemented as backend using the Differential Engine.
+
+Changelog
+---------
+
+The changelog can be found [here][changelog].
 
 Requirements
-=======
-   - Open-Xchange >= 7.2.1 (issue #5)
+------------
 
-Install
-=======
+  * Open-Xchange >= 7.2.1
+  * Z-Push-2 >= 2.0.7
 
-1. setup Z-Push
-2. make sure the following extra php libs are installed:
-    * HTTP\_Request2
-    * Net\_URL2
-3. clone z-push-ox in the backends directory as ox
-    * `cd backend && git clone https://github.com/z-push-ox/z-push-ox.git ox`
-4. add the following to the backend settings (config.php):
-    * `define('BACKEND_PROVIDER', "BackendOX");`
-    * `define('OX_SERVER', 'https://your.server'); //http is also valid`
+Installation
+------------
 
+RPM and DEB files are provided on the [releases] page of the repository.
 
-Feature List
-============
+### Debian / Ubuntu
 
-### Legend:
-  - X ~ working
-  - \- ~ not working
-  - O ~ not tested / not testable
-  - OX ~ edited in OX and synced to device
-  - AS ~ edited on device and synced to OX
+Z-Push has been re-branded by Debian and is called d-push. You may find the
+appropriate deb files [here][d-push].
 
-### EMail:
+We did not include [HTTP\_Request2] and [Net\_URL2] as dependency for the deb files as 
+there are no official deb files for them. You need to resolve this dependency for 
+yourself.
 
-### Calendar:
-###### Basics:
-<table>
-  <tr>
-    <th></th>
-    <th>OX</th>
-    <th>AS</th>
-  </tr>
-  <tr>
-    <td>create</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>delete</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>allday events</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>set title</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>set start / end date</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>change folder</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>add / edit attendees</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>alerts</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-</table>
-###### Recurrence:
-<table>
-  <tr>
-    <th></th>
-    <th>OX</th>
-    <th>AS</th>
-  </tr>
-  <tr>
-    <td>no recurrence</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>set end of recurrence</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>exceptions</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>daily</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>weekly</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>monthly</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>monthly on the nth day</td>
-    <td>X</td>
-    <td>O</td>
-  </tr>
-  <tr>
-    <td>yearly</td>
-    <td>O</td>
-    <td>O</td>
-  </tr>
-  <tr>
-    <td>yearly on the nth day</td>
-    <td>O</td>
-    <td>O</td>
-  </tr>
-</table>
+      pear install --alldeps HTTP_Request2 Net_URL2
 
+### Nightly Builds
 
-### Contacts:
-You can add, delete and modify contacts. Contact folders are supported (given your device supports them as well).
-Moving a contact from one group to another is not supported.
+There are [nightly builds] available. Keep in mind however, that these are likely to be
+more unstable than release builds.
 
-###### Synced fields:
-  * fileas
-  * lastname
-  * firstname
-  * middlename
-  * nickname
-  * birthday
-  * title
-  * department
-  * suffix
-  * anniversary
-  * assistantname
-  * assistnamephonenumber
-  * spouse
-  * body
-  * imaddress
-  * imaddress2
-  * homecity
-  * homecountry
-  * homepostalcode
-  * homestate
-  * homestreet
-  * businesscity
-  * businesscountry
-  * businesspostalcode
-  * businessstate
-  * businessstreet
-  * othercity
-  * othercountry
-  * otherpostalcode
-  * otherstate
-  * otherstreet
-  * managername
-  * email1address
-  * email2address
-  * email3address
-  * companyname
-  * jobtitle
-  * webpage
-  * homephonenumber
-  * home2phonenumber
-  * mobilephonenumber
-  * telephone_pager
-  * carphonenumber
-  * homefaxnumber
-  * radiophonenumber
-  * businessphonenumber
-  * business2phonenumber
-  * businessfaxnumber
-  * categories
-  * yomifirstname
-  * yomilastname
-  * yomicompanyname
+### From Source
 
+1.  [setup z-push]
+
+2.  make sure the following extra php libs are installed:
+
+   * [HTTP\_Request2]
+
+   * [Net\_URL2]
+
+3.  clone z-push-ox in the backends directory as ox
+
+        cd backend && git clone https://github.com/z-push-ox/z-push-ox.git ox
+
+4.  add the following to the backend settings (config.php):
+
+        define('BACKEND_PROVIDER', "BackendOX");
+        define('OX_SERVER', 'https://your.server'); //http is also valid
+
+Feature Requests & Bugs
+-----------------------
+
+Please use the projects [bugtracker] to report bugs or file feature requests.
 
 License
-=======
+-------
 
-This program is free software: you can redistribute it and/or modify it under 
+This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License, version 3.
+
+[bugtracker]: https://github.com/z-push-ox/z-push-ox/issues
+[d-push]: http://packages.debian.org/search?keywords=d-push
+[feature matrix]: https://github.com/z-push-ox/z-push-ox/blob/master/featurematrix.md
+[changelog]: https://github.com/z-push-ox/z-push-ox/blob/master/changelog
+[HTTP\_Request2]: http://pear.php.net/package/HTTP_Request2
+[Net\_URL2]: http://pear.php.net/package/Net_URL2
+[nightly builds]: http://sourceforge.net/projects/z-push-ox/files/
+[releases]: https://github.com/z-push-ox/z-push-ox/releases
+[setup z-push]: http://doc.zarafa.com/7.0/Administrator_Manual/en-US/html/_zpush.html
+[Z-Push]: http://z-push.sourceforge.net
