@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Z-PUSH-OX by z-push-ox</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>Z-PUSH-OX</h1>
+        <p>An Open-Xchange Z-Push-2 Backend</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/z-push-ox/z-push-ox" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/z-push-ox/z-push-ox/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/z-push-ox/z-push-ox/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>
+<a name="z-push-ox" class="anchor" href="#z-push-ox"><span class="octicon octicon-link"></span></a>Z-Push-OX</h1>
+
+<p>Z-Push-OX is a Z-Push-2 backend for Open-Xchange. As it is a work in progress
+please see the <a href="https://github.com/z-push-ox/z-push-ox/blob/master/featurematrix.md">feature matrix</a> for the currently implemented features and take a
+look at the <a href="https://github.com/z-push-ox/z-push-ox/issues">bugtracker</a>.</p>
+
+<h2>
+<a name="infrastructure" class="anchor" href="#infrastructure"><span class="octicon octicon-link"></span></a>Infrastructure</h2>
+
+<p><img src="http://z-push.sourceforge.net/soswp/uploads/1232370881.png" alt=""></p>
+
+<p>Z-Push-2 is an implementation of Microsoft's ActiveSync protocol which is used
+'over-the-air' for multi platform active sync devices, including Windows Mobile
+and active sync used on Apple's iPhone, Sony Ericsson and Nokia phones. Open
+source Z-Push enables any PHP-based groupware package to become fully syncable
+with any ActiveSync-compliant device.</p>
+
+<p>Z-Push-OX is implemented as backend using the Differential Engine.</p>
+
+<h2>
+<a name="changelog" class="anchor" href="#changelog"><span class="octicon octicon-link"></span></a>Changelog</h2>
+
+<p>The changelog can be found <a href="https://github.com/z-push-ox/z-push-ox/blob/master/changelog">here</a>.</p>
+
+<h2>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>Open-Xchange &gt;= 7.2.1</li>
+<li>Z-Push-2 &gt;= 2.0.7</li>
+</ul><h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>RPM and DEB files are provided on the <a href="https://github.com/z-push-ox/z-push-ox/releases">releases</a> page of the repository.</p>
+
+<h3>
+<a name="debian--ubuntu" class="anchor" href="#debian--ubuntu"><span class="octicon octicon-link"></span></a>Debian / Ubuntu</h3>
+
+<p>Z-Push has been re-branded by Debian and is called d-push. You may find the
+appropriate deb files <a href="http://packages.debian.org/search?keywords=d-push">here</a>.</p>
+
+<p>We did not include <a href="http://pear.php.net/package/HTTP_Request2">HTTP_Request2</a> and <a href="http://pear.php.net/package/Net_URL2">Net_URL2</a> as dependency for the deb files as 
+there are no official deb files for them. You need to resolve this dependency for 
+yourself.</p>
+
+<pre><code>  pear install --alldeps HTTP_Request2 Net_URL2
+</code></pre>
+
+<h3>
+<a name="nightly-builds" class="anchor" href="#nightly-builds"><span class="octicon octicon-link"></span></a>Nightly Builds</h3>
+
+<p>There are <a href="http://sourceforge.net/projects/z-push-ox/files/">nightly builds</a> available. Keep in mind however, that these are likely to be
+more unstable than release builds.</p>
+
+<h3>
+<a name="from-source" class="anchor" href="#from-source"><span class="octicon octicon-link"></span></a>From Source</h3>
+
+<ol>
+<li><p><a href="http://doc.zarafa.com/7.0/Administrator_Manual/en-US/html/_zpush.html">setup z-push</a></p></li>
+<li><p>make sure the following extra php libs are installed:</p></li>
+</ol><ul>
+<li><p><a href="http://pear.php.net/package/HTTP_Request2">HTTP_Request2</a></p></li>
+<li><p><a href="http://pear.php.net/package/Net_URL2">Net_URL2</a></p></li>
+</ul><ol>
+<li>
+<p>clone z-push-ox in the backends directory as ox</p>
+
+<pre><code>cd backend &amp;&amp; git clone https://github.com/z-push-ox/z-push-ox.git ox
+</code></pre>
+</li>
+<li>
+<p>add the following to the backend settings (config.php):</p>
+
+<pre><code>define('BACKEND_PROVIDER', "BackendOX");
+define('OX_SERVER', 'https://your.server'); //http is also valid
+</code></pre>
+</li>
+</ol><h2>
+<a name="feature-requests--bugs" class="anchor" href="#feature-requests--bugs"><span class="octicon octicon-link"></span></a>Feature Requests &amp; Bugs</h2>
+
+<p>Please use the projects <a href="https://github.com/z-push-ox/z-push-ox/issues">bugtracker</a> to report bugs or file feature requests.</p>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License, version 3.</p>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/z-push-ox">z-push-ox</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-42989654-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
