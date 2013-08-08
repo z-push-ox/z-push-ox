@@ -1,7 +1,9 @@
 Feature Matrix
 ==============
 
-### Legend:
+Legend
+------
+
 | Symbol | Explanation                 |
 | :----: | :-------------------------- |
 |   X    | working                     |
@@ -11,12 +13,14 @@ Feature Matrix
 |   AS   | edited on device sync to OX |
 
 
-### EMail:
+EMail
+-----
 
 Mostly working ;)
 
 
-### Calendar:
+Calendar
+--------
 
 #### Basics:
 |                      | OX  | AS  |
@@ -44,7 +48,8 @@ Mostly working ;)
 | yearly on the nth day  |  O  |  O  |
 
 
-### Contacts:
+Contacts
+--------
 
 You can add, delete and modify contacts. Contact folders are supported 
 (given your device supports them as well). Moving a contact from one 

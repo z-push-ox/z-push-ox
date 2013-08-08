@@ -1,7 +1,9 @@
-README.md  /usr/share/z-push/backend/ox/
-LICENSE    /usr/share/z-push/backend/ox/
-ox.php     /usr/share/z-push/backend/ox/
-calendar   /usr/share/z-push/backend/ox/
-contacts   /usr/share/z-push/backend/ox/
-lib        /usr/share/z-push/backend/ox/
-mail       /usr/share/z-push/backend/ox/
+README.md         /usr/share/z-push/backend/ox/
+LICENSE           /usr/share/z-push/backend/ox/
+featurematrix.md  /usr/share/z-push/backend/ox/
+ox.php            /usr/share/z-push/backend/ox/
+git_revision      /usr/share/z-push/backend/ox/
+calendar          /usr/share/z-push/backend/ox/
+contacts          /usr/share/z-push/backend/ox/
+lib               /usr/share/z-push/backend/ox/
+mail              /usr/share/z-push/backend/ox/

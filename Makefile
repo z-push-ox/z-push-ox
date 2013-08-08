@@ -1,6 +1,7 @@
 CP = cp
 RM = rm
 MV = mv
+GIT = git
 ALIEN = alien
 BUILDPACKAGE = dpkg-buildpackage
 
@@ -11,6 +12,7 @@ install:
 build:
 
 deb:
+	$(GIT) log -1 --format="%H" > git_revision
 	$(CP) changelog debian/changelog
 	$(BUILDPACKAGE)
 	$(RM) debian/changelog
