@@ -1,4 +1,4 @@
-d-push (0.1.0-nightly) experimental; urgency=low
+d-push (0.1.0) experimental; urgency=low
 
   * initial release
   * support sync for
@@ -7,4 +7,4 @@ d-push (0.1.0-nightly) experimental; urgency=low
     - Calendar
     take a look at the featurematrix.md for more information
 
- -- z-push-ox <no@valid.mail>  Sun, 04 Aug 2013 01:17:00 +0100
+ -- z-push-ox <no@valid.mail>  Sun, 08 Aug 2013 13:00:00 +0100
