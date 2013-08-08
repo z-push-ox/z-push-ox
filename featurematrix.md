@@ -2,123 +2,56 @@ Feature Matrix
 ==============
 
 ### Legend:
-  - X ~ working
-  - \- ~ not working
-  - O ~ not tested / not testable
-  - OX ~ edited in OX and synced to device
-  - AS ~ edited on device and synced to OX
+| Symbol | Explanation                 |
+| :----: | :-------------------------- |
+|   X    | working                     |
+|   -    | not working                 |
+|   O    | not tested / not testable   |
+|   OX   | edited in OX sync to device |
+|   AS   | edited on device sync to OX |
+
 
 ### EMail:
 
+Mostly working ;)
+
+
 ### Calendar:
-###### Basics:
-<table>
-  <tr>
-    <th></th>
-    <th>OX</th>
-    <th>AS</th>
-  </tr>
-  <tr>
-    <td>create</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>delete</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>allday events</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>set title</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>set start / end date</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>change folder</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>add / edit attendees</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>alerts</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-</table>
-###### Recurrence:
-<table>
-  <tr>
-    <th></th>
-    <th>OX</th>
-    <th>AS</th>
-  </tr>
-  <tr>
-    <td>no recurrence</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>set end of recurrence</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>exceptions</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>daily</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>weekly</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>monthly</td>
-    <td>X</td>
-    <td>X</td>
-  </tr>
-  <tr>
-    <td>monthly on the nth day</td>
-    <td>X</td>
-    <td>O</td>
-  </tr>
-  <tr>
-    <td>yearly</td>
-    <td>O</td>
-    <td>O</td>
-  </tr>
-  <tr>
-    <td>yearly on the nth day</td>
-    <td>O</td>
-    <td>O</td>
-  </tr>
-</table>
+
+#### Basics:
+|                      | OX  | AS  |
+| -------------------- | :-: | :-: |
+| create               |  X  |  X  |
+| delete               |  X  |  X  |
+| allday events        |  X  |  X  |
+| set title            |  X  |  X  |
+| set start / end date |  X  |  X  |
+| change folder        |  -  |  -  |
+| add / edit attendees |  -  |  -  |
+| alerts               |  -  |  -  |
+
+#### Recurrence:
+|                        | OX  | AS  |
+| ---------------------- | :-: | :-: |
+| no recurrence          |  X  |  X  |
+| set end of recurrence  |  X  |  X  |
+| exceptions             |  X  |  -  |
+| daily                  |  X  |  X  |
+| weekly                 |  X  |  X  |
+| monthly                |  X  |  X  |
+| monthly on the nth day |  X  |  O  |
+| yearly                 |  O  |  O  |
+| yearly on the nth day  |  O  |  O  |
 
 
 ### Contacts:
-You can add, delete and modify contacts. Contact folders are supported (given your device supports them as well).
-Moving a contact from one group to another is not supported.
 
-###### Synced fields:
+You can add, delete and modify contacts. Contact folders are supported 
+(given your device supports them as well). Moving a contact from one 
+group to another is not yet supported.
+
+#### Synced fields:
+
   * fileas
   * lastname
   * firstname
