@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Z-PUSH-OX by z-push-ox</title>
+    <title>Z-Push-OX by z-push-ox</title>
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
@@ -17,7 +17,7 @@
   <body>
 
       <header>
-        <h1>Z-PUSH-OX</h1>
+        <h1>Z-Push-OX</h1>
         <p>An Open-Xchange Z-Push-2 Backend</p>
       </header>
 
@@ -39,10 +39,7 @@
         <ul></ul>
       </nav>
       <section>
-        <h1>
-<a name="z-push-ox" class="anchor" href="#z-push-ox"><span class="octicon octicon-link"></span></a>Z-Push-OX</h1>
-
-<p>Z-Push-OX is a Z-Push-2 backend for Open-Xchange. As it is a work in progress
+        <p>Z-Push-OX is a <a href="http://z-push.sourceforge.net">Z-Push</a>-2 backend for Open-Xchange. As it is a work in progress
 please see the <a href="https://github.com/z-push-ox/z-push-ox/blob/master/featurematrix.md">feature matrix</a> for the currently implemented features and take a
 look at the <a href="https://github.com/z-push-ox/z-push-ox/issues">bugtracker</a>.</p>
 
@@ -51,11 +48,9 @@ look at the <a href="https://github.com/z-push-ox/z-push-ox/issues">bugtracker</
 
 <p><img src="http://z-push.sourceforge.net/soswp/uploads/1232370881.png" alt=""></p>
 
-<p>Z-Push-2 is an implementation of Microsoft's ActiveSync protocol which is used
-'over-the-air' for multi platform active sync devices, including Windows Mobile
-and active sync used on Apple's iPhone, Sony Ericsson and Nokia phones. Open
-source Z-Push enables any PHP-based groupware package to become fully syncable
-with any ActiveSync-compliant device.</p>
+<p><a href="http://z-push.sourceforge.net">Z-Push</a>-2 is an implementation of Microsoft's ActiveSync protocol which is used
+'over-the-air' for multi platform active sync devices, including Windows Mobile, 
+Apple's iPhone, Sony Ericsson and Nokia phones.</p>
 
 <p>Z-Push-OX is implemented as backend using the Differential Engine.</p>
 
@@ -75,14 +70,24 @@ with any ActiveSync-compliant device.</p>
 
 <p>RPM and DEB files are provided on the <a href="https://github.com/z-push-ox/z-push-ox/releases">releases</a> page of the repository.</p>
 
+<p>After resolving the dependencies and installing Z-Push-OX you need to 
+<a href="http://doc.zarafa.com/7.0/Administrator_Manual/en-US/html/_zpush.html">configure Z-Push-2</a>. Than change the Z-Push-2 config.php to use the 
+Z-Push-OX Backend:</p>
+
+<pre><code>    define('BACKEND_PROVIDER', "BackendOX");
+    define('OX_SERVER', 'https://your.server'); //http is also valid
+</code></pre>
+
+<p>You can find a working example config.php <a href="https://gist.github.com/liob/6183593">here</a>.</p>
+
 <h3>
 <a name="debian--ubuntu" class="anchor" href="#debian--ubuntu"><span class="octicon octicon-link"></span></a>Debian / Ubuntu</h3>
 
 <p>Z-Push has been re-branded by Debian and is called d-push. You may find the
 appropriate deb files <a href="http://packages.debian.org/search?keywords=d-push">here</a>.</p>
 
-<p>We did not include <a href="http://pear.php.net/package/HTTP_Request2">HTTP_Request2</a> and <a href="http://pear.php.net/package/Net_URL2">Net_URL2</a> as dependency for the deb files as 
-there are no official deb files for them. You need to resolve this dependency for 
+<p>Dependencies for <a href="http://pear.php.net/package/HTTP_Request2">HTTP_Request2</a> and <a href="http://pear.php.net/package/Net_URL2">Net_URL2</a> are not included for the deb files as 
+there are no official deb files for them. You need to resolve these dependencies for 
 yourself.</p>
 
 <pre><code>  pear install --alldeps HTTP_Request2 Net_URL2
@@ -90,6 +95,8 @@ yourself.</p>
 
 <h3>
 <a name="nightly-builds" class="anchor" href="#nightly-builds"><span class="octicon octicon-link"></span></a>Nightly Builds</h3>
+
+<p><a href="https://travis-ci.org/z-push-ox/z-push-ox"><img src="https://travis-ci.org/z-push-ox/z-push-ox.png?branch=master" alt="Build Status"></a></p>
 
 <p>There are <a href="http://sourceforge.net/projects/z-push-ox/files/">nightly builds</a> available. Keep in mind however, that these are likely to be
 more unstable than release builds.</p>
