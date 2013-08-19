@@ -10,7 +10,8 @@ class OXCalendarSync {
                     // 'organizer' => 'organizeremail',
                     'location' => 'location',
                     'note' => 'body',
-                    'categories' => 'categories'
+                    'categories' => 'categories',
+		    'alarm' => 'reminder',
             ),
             'dates' => array(
                     'start_date' => 'starttime',
