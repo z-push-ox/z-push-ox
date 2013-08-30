@@ -1,6 +1,8 @@
 d-push (0.1.1-nightly) experimental; urgency=low
 
   * nightly release
+  * Calendar
+    - alarm time gets synced
 
  -- z-push-ox <no@valid.mail>  Sun, 08 Aug 2013 14:00:00 +0100
 
