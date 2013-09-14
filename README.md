@@ -9,7 +9,7 @@ look at the [bugtracker].
 Infrastructure
 --------------
 
-![](http://z-push.sourceforge.net/soswp/uploads/1232370881.png)
+![Z-Push-2 infrastructure](http://z-push.sourceforge.net/soswp/uploads/1232370881.png)
 
 [Z-Push]-2 is an implementation of Microsoft's ActiveSync protocol which is used
 'over-the-air' for multi platform active sync devices, including Windows Mobile, 
@@ -23,11 +23,37 @@ Changelog
 
 The changelog can be found [here][changelog].
 
+
 Requirements
 ------------
 
   * Open-Xchange >= 7.2.1
   * Z-Push-2 >= 2.0.7
+
+
+Demo
+----
+
+[![Build Status](https://travis-ci.org/z-push-ox/Z-Push-Demo.png?branch=master)](https://travis-ci.org/z-push-ox/Z-Push-Demo)
+
+For this to work you need an [ox.io] account. Keep in mind, that the 
+demo does not perform as well as on a dedicated server.
+
+You should NOT transfer/input ANY sensitive data using this demo as 
+you should not do this with your [ox.io] account either. Currently the
+connection between the demo server and [ox.io] is not encrypted.
+
+### Login Data
+
+| -------- | ---------------------------------------------- |
+| Username | username with domain (i.e.: test@ox.io)        |
+| EMail    | the email adress you picked (i.e.: test@ox.io) |
+| Server   | zpox-liob.rhcloud.com                          |
+| -------- | ---------------------------------------------- |
+
+The domain of the EMail address differs from the domain of the test server. This
+will not be expected from your ActiveSync client. Therefore you need to input the 
+demo server domain name in the advanced settings.
 
 
 Installation
@@ -102,6 +128,7 @@ the terms of the GNU Affero General Public License, version 3.
 [HTTP\_Request2]: http://pear.php.net/package/HTTP_Request2
 [Net\_URL2]: http://pear.php.net/package/Net_URL2
 [nightly builds]: http://sourceforge.net/projects/z-push-ox/files/
+[ox.io]: (https://www.ox.io)
 [releases]: https://github.com/z-push-ox/z-push-ox/releases
 [setup z-push]: http://doc.zarafa.com/7.0/Administrator_Manual/en-US/html/_zpush.html
 [Z-Push]: http://z-push.sourceforge.net
