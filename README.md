@@ -45,11 +45,11 @@ connection between the demo server and [ox.io] is not encrypted.
 
 ### Login Data
 
+| Input    | Value                                          |
 | -------- | ---------------------------------------------- |
 | Username | username with domain (i.e.: test@ox.io)        |
 | EMail    | the email adress you picked (i.e.: test@ox.io) |
 | Server   | zpox-liob.rhcloud.com                          |
-| -------- | ---------------------------------------------- |
 
 The domain of the EMail address differs from the domain of the test server. This
 will not be expected from your ActiveSync client. Therefore you need to input the 
@@ -128,7 +128,7 @@ the terms of the GNU Affero General Public License, version 3.
 [HTTP\_Request2]: http://pear.php.net/package/HTTP_Request2
 [Net\_URL2]: http://pear.php.net/package/Net_URL2
 [nightly builds]: http://sourceforge.net/projects/z-push-ox/files/
-[ox.io]: (https://www.ox.io)
+[ox.io]: https://www.ox.io
 [releases]: https://github.com/z-push-ox/z-push-ox/releases
 [setup z-push]: http://doc.zarafa.com/7.0/Administrator_Manual/en-US/html/_zpush.html
 [Z-Push]: http://z-push.sourceforge.net
