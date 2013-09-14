@@ -39,14 +39,17 @@
         <ul></ul>
       </nav>
       <section>
-        <p>Z-Push-OX is a <a href="http://z-push.sourceforge.net">Z-Push</a>-2 backend for Open-Xchange. As it is a work in progress
+        <h1>
+<a name="z-push-ox" class="anchor" href="#z-push-ox"><span class="octicon octicon-link"></span></a>Z-Push-OX</h1>
+
+<p>Z-Push-OX is a <a href="http://z-push.sourceforge.net">Z-Push</a>-2 backend for Open-Xchange. As it is a work in progress
 please see the <a href="https://github.com/z-push-ox/z-push-ox/blob/master/featurematrix.md">feature matrix</a> for the currently implemented features and take a
 look at the <a href="https://github.com/z-push-ox/z-push-ox/issues">bugtracker</a>.</p>
 
 <h2>
 <a name="infrastructure" class="anchor" href="#infrastructure"><span class="octicon octicon-link"></span></a>Infrastructure</h2>
 
-<p><img src="http://z-push.sourceforge.net/soswp/uploads/1232370881.png" alt=""></p>
+<p><img src="http://z-push.sourceforge.net/soswp/uploads/1232370881.png" alt="Z-Push-2 infrastructure"></p>
 
 <p><a href="http://z-push.sourceforge.net">Z-Push</a>-2 is an implementation of Microsoft's ActiveSync protocol which is used
 'over-the-air' for multi platform active sync devices, including Windows Mobile, 
@@ -66,6 +69,44 @@ Apple's iPhone, Sony Ericsson and Nokia phones.</p>
 <li>Open-Xchange &gt;= 7.2.1</li>
 <li>Z-Push-2 &gt;= 2.0.7</li>
 </ul><h2>
+<a name="demo" class="anchor" href="#demo"><span class="octicon octicon-link"></span></a>Demo</h2>
+
+<p><a href="https://travis-ci.org/z-push-ox/Z-Push-Demo"><img src="https://travis-ci.org/z-push-ox/Z-Push-Demo.png?branch=master" alt="Build Status"></a></p>
+
+<p>For this to work you need an <a href="https://www.ox.io">ox.io</a> account. Keep in mind, that the 
+demo does not perform as well as on a dedicated server.</p>
+
+<p>You should NOT transfer/input ANY sensitive data using this demo as 
+you should not do this with your <a href="https://www.ox.io">ox.io</a> account either. Currently the
+connection between the demo server and <a href="https://www.ox.io">ox.io</a> is not encrypted.</p>
+
+<h3>
+<a name="login-data" class="anchor" href="#login-data"><span class="octicon octicon-link"></span></a>Login Data</h3>
+
+<table>
+<thead><tr>
+<th>Input</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Username</td>
+<td>username with domain (i.e.: <a href="mailto:test@ox.io">test@ox.io</a>)</td>
+</tr>
+<tr>
+<td>EMail</td>
+<td>the email adress you picked (i.e.: <a href="mailto:test@ox.io">test@ox.io</a>)</td>
+</tr>
+<tr>
+<td>Server</td>
+<td>zpox-liob.rhcloud.com</td>
+</tr>
+</tbody>
+</table><p>The domain of the EMail address differs from the domain of the test server. This
+will not be expected from your ActiveSync client. Therefore you need to input the 
+demo server domain name in the advanced settings.</p>
+
+<h2>
 <a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
 
 <p>RPM and DEB files are provided on the <a href="https://github.com/z-push-ox/z-push-ox/releases">releases</a> page of the repository.</p>
