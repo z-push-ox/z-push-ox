@@ -28,7 +28,7 @@ Requirements
 ------------
 
   * Open-Xchange >= 7.2.1
-  * Z-Push-2 >= 2.0.7
+  * Z-Push-2 >= 2.1.0
 
 
 Demo
