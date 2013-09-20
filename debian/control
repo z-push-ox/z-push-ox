@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/z-push-ox/z-push-ox
 
 Package: d-push-ox
 Architecture: all
-Depends: d-push (>= 2.0.7)
+Depends: d-push (>= 2.1.0)
 Recommends: 
 Description: Open-Xchange Z-Push-2 Backend
  D-push is debian's rebranded version of zarafa's z-push.
@@ -27,7 +27,7 @@ Description: Open-Xchange Z-Push-2 Backend
 
 Package: z-push-ox
 Architecture: all
-Depends: z-push (>= 2.0.7), php-pear-HTTP-Request2, php-pear-Net-URL2
+Depends: z-push (>= 2.1.0), php-pear-HTTP-Request2, php-pear-Net-URL2
 Recommends: 
 Description: Open-Xchange Z-Push-2 Backend
  D-push is debian's rebranded version of zarafa's z-push.
