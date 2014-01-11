@@ -70,8 +70,9 @@ class OXCalendarSync {
                 'OXCalendarSync::GetMessageList(folderid: ' . $folderid .
                          '  folder: ' . $folder->displayname . '  data: ' .
                          json_encode($response) . ')');
-        $message = array();
+        $messages = array();
         foreach ($response["data"] as &$event) {
+            $message = array();
             $message["id"] = $event[0];
             $message["mod"] = $event[1];
             $message["flags"] = 1;
