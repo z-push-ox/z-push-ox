@@ -110,12 +110,17 @@ class BackendOX extends BackendDiff {
         $root_folder = $root_folder[0];
         $this -> root_folder[] = $root_folder;
         $folderlist = $this -> GetSubFolders($root_folder);
-        foreach ($folderlist as &$folder) {
-          $folder_list[] = $this -> StatFolder($folder);
+        foreach ($folderlist as &$folderid) {
+          $folder = $this -> StatFolder($folderid);
+          # custom folders for non email folders is only supported by eas >= 12
+          # all folders with parent == 1 are the default folders
+          if (Request::GetProtocolVersion() >= 12.0 or $folder['parent'] == 1){
+            $folder_list[] = $folder;
+          }
         }
       }
     }
-
+    
     // now get all mail folders:
     $response = $this -> OXConnector -> OXreqGET('/ajax/folders', array('action' => 'list', 'parent' => 'default0', // personal email folder ?
     'session' => $this -> OXConnector -> getSession(), 'allowed_modules' => 'mail',
@@ -126,15 +131,15 @@ class BackendOX extends BackendDiff {
 
     if ($response) {
       foreach ($response["data"] as &$root_folder) {
-        ZLog::Write(LOGLEVEL_DEBUG, "root_folder: " . $root_folder);
         $root_folder = $root_folder[0];
+        ZLog::Write(LOGLEVEL_DEBUG, "root_folder: " . $root_folder);
         $this -> root_folder[] = $root_folder;
         $folderlist = $this -> GetSubFolders($root_folder);
         $folder_list[] = $this -> StatFolder($root_folder);
-        foreach ($folderlist as &$folder) {
-          if (!is_numeric($folder)) {
-            $folder_list[] = $this -> StatFolder($folder);
-            ZLog::Write(LOGLEVEL_DEBUG, "folder: " . $folder);
+        foreach ($folderlist as &$folderid) {
+          if (!is_numeric($folderid)) {
+            $folder_list[] = $this -> StatFolder($folderid);
+            ZLog::Write(LOGLEVEL_DEBUG, "folder: " . $folderid);
           }
         }
       }
