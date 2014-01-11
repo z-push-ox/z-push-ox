@@ -1,6 +1,7 @@
 d-push (0.1.1-nightly) experimental; urgency=low
 
   * nightly release
+  * improved support for devices using aes lower than version 12.0
   * Calendar
     - alarm time gets synced
 
