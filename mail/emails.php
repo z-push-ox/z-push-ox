@@ -198,7 +198,7 @@ class OXEmailSync
       'session' => $this -> OXConnector -> getSession(),
       'folder' => $folderid,
       'id' => $id,
-      'unseen' => 'true',
+      'unseen' => 'true',  // I suppose this makes ox return only unseen messages
       'timezone' => 'UTC', // causes the ox server to return all dates in utc
     ));
 
@@ -238,7 +238,10 @@ class OXEmailSync
     }
 
     $output -> subject = $response["data"]["subject"];
-    $output -> read = array_key_exists("unseen", $response["data"]) && $response["data"]["unseen"] == "true" ? false : true;
+
+    // Though the unseen key is not in data we can assume the messages returned are in fact unseen
+    // because of the "unseen" => true parameter to OX API (?)
+    $output -> read = array_key_exists("unseen", $response["data"]) && $response["data"]["unseen"] == "true" ? false : false;
     $output -> datereceived = $this -> OXUtils -> timestampOXtoPHP($response["data"]["received_date"]);
 
     foreach ($response["data"]["attachments"] as $attachment) {
